@@ -1,0 +1,17 @@
+{
+  "name": "copilot-autonomous-player",
+  "version": "1.0.0",
+  "description": "Web games for ad revenue — targeting first $1",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:ui": "npx playwright test --ui",
+    "serve": "npx serve . -p 3000"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.45.0",
+    "serve": "^14.2.0"
+  },
+  "keywords": ["games", "html5", "web-games", "idle", "clicker"],
+  "author": "copilot-autonomous-player",
+  "license": "MIT"
+}

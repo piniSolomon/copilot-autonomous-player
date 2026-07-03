@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Free Web Games — Play Casual Games Online</title>
+  <meta name="description" content="Play free browser games online. Idle clicker, dodge games, and more. No download required. Play instantly on desktop and mobile." />
+  <meta name="keywords" content="free web games, browser games, idle clicker, dodge game, casual games, play online" />
+  <meta property="og:title" content="Free Web Games — Play Casual Games Online" />
+  <meta property="og:description" content="Play free browser games instantly. Cookie Kingdom (idle clicker) and Dodge Rush (obstacle game). No download, no install." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://pini-solomon-globalen.github.io/copilot-autonomous-player/" />
+  <meta property="og:image" content="https://pini-solomon-globalen.github.io/copilot-autonomous-player/assets/og-image.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Free Web Games — Play Casual Games Online" />
+  <meta name="twitter:description" content="Play free browser games instantly. Cookie Kingdom and Dodge Rush." />
+  <link rel="canonical" href="https://pini-solomon-globalen.github.io/copilot-autonomous-player/" />
+
+  <!-- Structured data for game list -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Free Web Games",
+    "url": "https://pini-solomon-globalen.github.io/copilot-autonomous-player/",
+    "description": "Free casual browser games — play instantly, no download needed.",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://pini-solomon-globalen.github.io/copilot-autonomous-player/?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d0d1a;
+      --surface: #161628;
+      --surface2: #1e1e35;
+      --accent: #6c63ff;
+      --accent2: #ff6584;
+      --text: #e0e0ff;
+      --muted: #6060a0;
+      --card-shadow: 0 8px 32px rgba(108,99,255,0.15);
+      --radius: 16px;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      line-height: 1.6;
+    }
+
+    /* Header */
+    header {
+      background: var(--surface);
+      border-bottom: 2px solid var(--accent);
+      padding: 20px 24px;
+      text-align: center;
+    }
+    header h1 {
+      font-size: clamp(1.6rem, 5vw, 2.4rem);
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 6px;
+    }
+    header p { color: var(--muted); font-size: 1rem; }
+
+    /* Ad banner top */
+    .ad-banner {
+      background: var(--surface);
+      border: 1px dashed var(--muted);
+      text-align: center;
+      padding: 10px;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .ad-label { font-size: 0.65rem; display: block; margin-bottom: 4px; }
+
+    /* Main content */
+    main {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 32px 20px;
+    }
+
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--surface2);
+    }
+
+    /* Games grid */
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+
+    .game-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      box-shadow: var(--card-shadow);
+      border: 1px solid var(--surface2);
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      display: block;
+    }
+    .game-card:hover, .game-card:focus {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 48px rgba(108,99,255,0.25);
+      border-color: var(--accent);
+      outline: none;
+    }
+
+    .game-thumb {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 5rem;
+      background: var(--surface2);
+      position: relative;
+      overflow: hidden;
+    }
+    .game-thumb.cookie-bg {
+      background: radial-gradient(circle at 50% 50%, #3d1500, #1a0a00);
+    }
+    .game-thumb.dodge-bg {
+      background: radial-gradient(circle at 50% 50%, #111130, #0a0a1a);
+    }
+    .game-thumb-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: bold;
+      padding: 3px 10px;
+      border-radius: 99px;
+      letter-spacing: 0.5px;
+    }
+
+    .game-info {
+      padding: 16px 18px;
+    }
+    .game-info h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .game-info p {
+      font-size: 0.875rem;
+      color: var(--muted);
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+    .game-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .tag {
+      background: var(--surface2);
+      border: 1px solid var(--surface2);
+      color: var(--muted);
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+    .play-btn {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 8px 22px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 99px;
+      font-size: 0.9rem;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      transition: filter 0.15s;
+    }
+    .game-card:hover .play-btn { filter: brightness(1.15); }
+
+    /* Features section */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 48px;
+    }
+    .feature-item {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+      border: 1px solid var(--surface2);
+    }
+    .feature-icon { font-size: 2rem; margin-bottom: 8px; }
+    .feature-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
+    .feature-desc { font-size: 0.8rem; color: var(--muted); }
+
+    /* Ad mid-page */
+    .ad-mid {
+      background: var(--surface);
+      border: 1px dashed var(--muted);
+      text-align: center;
+      padding: 12px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      border-radius: var(--radius);
+      margin-bottom: 40px;
+      min-height: 100px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--surface2);
+      text-align: center;
+      padding: 24px 20px;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    .footer-links { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🎮 Free Web Games</h1>
+    <p>Play instant casual games — no download, no install, no sign-up</p>
+  </header>
+
+  <!-- Ad banner top -->
+  <div class="ad-banner">
+    <span class="ad-label">ADVERTISEMENT</span>
+    <div id="ad-header" style="min-height:50px; display:flex; align-items:center; justify-content:center;">
+      <!-- GameMonetize top banner: replace with actual SDK call -->
+      <span>[Ad Banner 728×90]</span>
+    </div>
+  </div>
+
+  <main>
+    <div class="section-title">🕹️ Featured Games</div>
+
+    <div class="games-grid">
+      <!-- Game 1: Cookie Kingdom -->
+      <a href="games/cookie-kingdom/index.html" class="game-card" aria-label="Play Cookie Kingdom — idle clicker game">
+        <div class="game-thumb cookie-bg">
+          🍪
+          <span class="game-thumb-badge">IDLE</span>
+        </div>
+        <div class="game-info">
+          <h2>🍪 Cookie Kingdom</h2>
+          <p>Click to bake cookies, buy upgrades, and build your idle cookie empire. Satisfying progression with auto-clickers!</p>
+          <div class="game-tags">
+            <span class="tag">Idle</span>
+            <span class="tag">Clicker</span>
+            <span class="tag">Upgrades</span>
+            <span class="tag">Mobile-friendly</span>
+          </div>
+          <span class="play-btn">▶ Play Now</span>
+        </div>
+      </a>
+
+      <!-- Game 2: Dodge Rush -->
+      <a href="games/dodge-rush/index.html" class="game-card" aria-label="Play Dodge Rush — obstacle dodge game">
+        <div class="game-thumb dodge-bg">
+          ⚡
+          <span class="game-thumb-badge" style="background:var(--accent2)">ACTION</span>
+        </div>
+        <div class="game-info">
+          <h2>⚡ Dodge Rush</h2>
+          <p>Dodge incoming obstacles in this fast-paced endless game! React quickly and survive as long as possible to set your high score.</p>
+          <div class="game-tags">
+            <span class="tag">Action</span>
+            <span class="tag">Endless</span>
+            <span class="tag">Reaction</span>
+            <span class="tag">High Score</span>
+          </div>
+          <span class="play-btn" style="background:var(--accent2)">▶ Play Now</span>
+        </div>
+      </a>
+    </div>
+
+    <!-- Mid-page ad -->
+    <div class="ad-mid">
+      <span class="ad-label">ADVERTISEMENT</span>
+      <div id="ad-mid" style="min-height:90px; display:flex; align-items:center; justify-content:center; width:100%;">
+        <!-- GameMonetize rectangle: replace with actual SDK call -->
+        <span>[Ad Rectangle 300×250]</span>
+      </div>
+    </div>
+
+    <div class="section-title">✨ Why Play Here?</div>
+    <div class="features">
+      <div class="feature-item">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-title">Instant Play</div>
+        <div class="feature-desc">No download, no install. Click and play immediately.</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">📱</div>
+        <div class="feature-title">Mobile Ready</div>
+        <div class="feature-desc">All games are optimized for touch screens and mobile devices.</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🆓</div>
+        <div class="feature-title">100% Free</div>
+        <div class="feature-desc">Every game is completely free to play, forever.</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🔒</div>
+        <div class="feature-title">No Sign-Up</div>
+        <div class="feature-desc">No account required. Your progress saves locally.</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Ad banner bottom -->
+  <div class="ad-banner" style="margin-top: 0;">
+    <span class="ad-label">ADVERTISEMENT</span>
+    <div id="ad-footer" style="min-height:50px; display:flex; align-items:center; justify-content:center;">
+      <span>[Ad Banner 728×90]</span>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-links">
+      <a href="games/cookie-kingdom/index.html">🍪 Cookie Kingdom</a>
+      <a href="games/dodge-rush/index.html">⚡ Dodge Rush</a>
+      <a href="https://github.com/Pini-Solomon-GLOBALEN/copilot-autonomous-player">GitHub</a>
+    </div>
+    <div>© 2026 Free Web Games — All games are free to play</div>
+  </footer>
+
+  <script>
+    // GameMonetize SDK placeholder
+    // When approved, replace with:
+    // <script src="https://api.gamemonetize.com/gmapi.js"></script>
+    // window.gm_sdk = GameMonetize({ key: 'YOUR_KEY' });
+    window.__adReady = true;
+  </script>
+</body>
+</html>

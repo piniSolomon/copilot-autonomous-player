@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Dodge Rush — Endless Obstacle Game</title>
+  <meta name="description" content="Dodge the incoming obstacles in this fast-paced endless runner! How long can you survive? Free browser game." />
+  <meta name="keywords" content="dodge game, obstacle game, endless runner, reaction game, free browser game" />
+  <meta property="og:title" content="Dodge Rush — Endless Obstacle Game" />
+  <meta property="og:description" content="Dodge the incoming obstacles! Free fast-paced browser game." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://pini-solomon-globalen.github.io/copilot-autonomous-player/games/dodge-rush/" />
+  <meta property="og:image" content="https://pini-solomon-globalen.github.io/copilot-autonomous-player/games/dodge-rush/preview.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Dodge Rush — Endless Obstacle Game" />
+  <meta name="twitter:description" content="Dodge the incoming obstacles! Free fast-paced browser game." />
+  <link rel="canonical" href="https://pini-solomon-globalen.github.io/copilot-autonomous-player/games/dodge-rush/" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a1a;
+      --surface: #111130;
+      --accent: #00e5ff;
+      --accent2: #ff4081;
+      --text: #e0e0ff;
+      --muted: #5060a0;
+      --green: #69ff47;
+      --yellow: #ffea00;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      touch-action: none;
+    }
+    header {
+      background: var(--surface);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid var(--accent);
+    }
+    header h1 { font-size: 1.3rem; color: var(--accent); }
+    #hiscore-display {
+      font-size: 0.9rem;
+      color: var(--yellow);
+      font-weight: bold;
+    }
+
+    /* Ad banner top */
+    .ad-banner {
+      background: var(--surface);
+      border: 1px dashed var(--muted);
+      text-align: center;
+      padding: 8px;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .ad-banner-label { font-size: 0.65rem; display: block; margin-bottom: 2px; }
+
+    /* Game wrapper */
+    #game-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 12px;
+    }
+
+    #game-container {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      border: 2px solid var(--accent);
+      border-radius: 8px;
+      background: #0a0a1a;
+      image-rendering: auto;
+    }
+
+    /* Overlays */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.82);
+      border-radius: 8px;
+      gap: 14px;
+      padding: 24px;
+    }
+    .overlay.hidden { display: none; }
+    .overlay h2 { font-size: 2rem; font-weight: 900; letter-spacing: 2px; }
+    .overlay p { font-size: 0.95rem; color: var(--muted); text-align: center; max-width: 280px; }
+    .score-big { font-size: 2.5rem; font-weight: 900; color: var(--accent); }
+    .hi-label { font-size: 0.85rem; color: var(--yellow); }
+    .btn {
+      padding: 12px 36px;
+      border: none;
+      border-radius: 99px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.1s, filter 0.1s;
+      letter-spacing: 1px;
+    }
+    .btn:active { transform: scale(0.95); }
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-primary:hover { filter: brightness(1.15); }
+    .btn-secondary { background: var(--accent2); color: #fff; }
+    .btn-secondary:hover { filter: brightness(1.15); }
+
+    /* Mobile controls */
+    #controls {
+      display: flex;
+      gap: 16px;
+      width: 100%;
+      max-width: 480px;
+    }
+    .ctrl-btn {
+      flex: 1;
+      padding: 18px;
+      background: var(--surface);
+      border: 2px solid var(--accent);
+      border-radius: var(--radius, 12px);
+      color: var(--accent);
+      font-size: 1.4rem;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      text-align: center;
+      font-weight: bold;
+      transition: background 0.1s;
+    }
+    .ctrl-btn:active { background: #1a2a3a; }
+
+    .instructions {
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    /* Ad bottom */
+    .ad-bottom {
+      background: var(--surface);
+      border: 1px dashed var(--muted);
+      text-align: center;
+      padding: 8px;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    footer {
+      text-align: center;
+      padding: 8px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      border-top: 1px solid var(--surface);
+    }
+    a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>⚡ Dodge Rush</h1>
+    <div id="hiscore-display">Best: <span id="hi-score">0</span></div>
+  </header>
+
+  <div class="ad-banner" id="ad-top">
+    <span class="ad-banner-label">ADVERTISEMENT</span>
+    <div id="gamemonetize-top" style="min-height:50px; display:flex; align-items:center; justify-content:center;">
+      <span>[Ad Banner 728×90]</span>
+    </div>
+  </div>
+
+  <div id="game-wrapper">
+    <div id="game-container">
+      <canvas id="canvas" width="480" height="420" aria-label="Dodge Rush game canvas"></canvas>
+
+      <!-- Start screen -->
+      <div class="overlay" id="start-screen">
+        <h2 style="color:var(--accent)">⚡ DODGE RUSH</h2>
+        <p>Dodge incoming obstacles. Survive as long as possible!</p>
+        <p style="color:var(--text)">← → Arrow keys &nbsp;|&nbsp; A/D &nbsp;|&nbsp; Tap buttons below</p>
+        <button class="btn btn-primary" id="start-btn">▶ START GAME</button>
+      </div>
+
+      <!-- Game Over screen -->
+      <div class="overlay hidden" id="gameover-screen">
+        <h2 style="color:var(--accent2)">💥 GAME OVER</h2>
+        <div>
+          <div class="score-big" id="final-score">0</div>
+          <div class="hi-label" id="hi-label">Best: 0</div>
+        </div>
+        <!-- Ad in game-over screen -->
+        <div style="background:var(--surface); border:1px dashed var(--muted); padding:8px; font-size:0.75rem; color:var(--muted); width:100%; text-align:center;">
+          <span style="font-size:0.65rem; display:block">ADVERTISEMENT</span>
+          <div id="gamemonetize-gameover" style="min-height:80px; display:flex; align-items:center; justify-content:center;">[Ad 320×50]</div>
+        </div>
+        <button class="btn btn-primary" id="restart-btn">🔄 PLAY AGAIN</button>
+        <button class="btn btn-secondary" id="menu-btn">🏠 Menu</button>
+      </div>
+    </div>
+
+    <div id="controls" aria-label="Mobile controls">
+      <button class="ctrl-btn" id="left-btn" aria-label="Move left">◀ LEFT</button>
+      <button class="ctrl-btn" id="right-btn" aria-label="Move right">RIGHT ▶</button>
+    </div>
+
+    <div class="instructions">
+      Arrow keys / A·D to dodge &nbsp;|&nbsp; Mobile: tap the buttons
+    </div>
+  </div>
+
+  <div class="ad-bottom" id="ad-bottom">
+    <span class="ad-banner-label">ADVERTISEMENT</span>
+    <div id="gamemonetize-bottom" style="min-height:50px; display:flex; align-items:center; justify-content:center;">
+      <span>[Ad Banner 320×50]</span>
+    </div>
+  </div>
+
+  <footer>
+    <a href="../../index.html">← Back to Games</a> &nbsp;|&nbsp; Dodge Rush v1.0
+  </footer>
+
+  <script>
+    // ── Constants ──────────────────────────────────────────────────────────
+    const CANVAS_W = 480;
+    const CANVAS_H = 420;
+    const PLAYER_W = 36;
+    const PLAYER_H = 44;
+    const OBS_W = 40;
+    const OBS_H = 30;
+    const LANE_COUNT = 5;
+    const LANES = Array.from({ length: LANE_COUNT }, (_, i) =>
+      Math.round((CANVAS_W / LANE_COUNT) * (i + 0.5) - OBS_W / 2)
+    );
+    const PLAYER_Y = CANVAS_H - PLAYER_H - 20;
+    const HI_KEY = 'dr_hi_v1';
+
+    // ── State ──────────────────────────────────────────────────────────────
+    let running = false;
+    let score = 0;
+    let hiScore = parseInt(localStorage.getItem(HI_KEY) || '0', 10);
+    let player = { x: CANVAS_W / 2 - PLAYER_W / 2, lane: 2 };
+    let obstacles = [];
+    let particles = [];
+    let speed = 3;
+    let frameCount = 0;
+    let spawnInterval = 80;
+    let keys = {};
+    let lastKeyTime = {};
+    let animId;
+    let alive = true;
+    let scoreIntervalId;
+
+    // Mobile control state
+    let leftHeld = false, rightHeld = false;
+    let moveTimer = null;
+
+    // ── Canvas ─────────────────────────────────────────────────────────────
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Obstacle shapes and colors
+    const OBS_TYPES = [
+      { color: '#ff4081', emoji: '🔴' },
+      { color: '#ff9800', emoji: '🟠' },
+      { color: '#9c27b0', emoji: '🟣' },
+      { color: '#f44336', emoji: '🔺' },
+    ];
+
+    // ── Draw helpers ───────────────────────────────────────────────────────
+    function drawPlayer(x) {
+      ctx.save();
+      // Body
+      ctx.fillStyle = '#00e5ff';
+      ctx.beginPath();
+      ctx.roundRect(x, PLAYER_Y, PLAYER_W, PLAYER_H, 6);
+      ctx.fill();
+      // Cockpit
+      ctx.fillStyle = '#0a0a1a';
+      ctx.beginPath();
+      ctx.ellipse(x + PLAYER_W / 2, PLAYER_Y + 10, 9, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Engine glow
+      const grd = ctx.createLinearGradient(x, PLAYER_Y + PLAYER_H, x, PLAYER_Y + PLAYER_H + 12);
+      grd.addColorStop(0, 'rgba(0,229,255,0.9)');
+      grd.addColorStop(1, 'rgba(0,229,255,0)');
+      ctx.fillStyle = grd;
+      ctx.fillRect(x + 8, PLAYER_Y + PLAYER_H, PLAYER_W - 16, 14);
+      ctx.restore();
+    }
+
+    function drawObstacle(ob) {
+      ctx.save();
+      const t = OBS_TYPES[ob.type];
+      ctx.fillStyle = t.color;
+      ctx.beginPath();
+      ctx.roundRect(ob.x, ob.y, OBS_W, OBS_H, 6);
+      ctx.fill();
+      // glint
+      ctx.fillStyle = 'rgba(255,255,255,0.18)';
+      ctx.fillRect(ob.x + 4, ob.y + 4, OBS_W - 8, 6);
+      ctx.restore();
+    }
+
+    function drawParticles() {
+      for (const p of particles) {
+        ctx.save();
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function drawBackground() {
+      // Starfield
+      ctx.fillStyle = '#0a0a1a';
+      ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+      // Lane dividers
+      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+      ctx.lineWidth = 1;
+      for (let i = 1; i < LANE_COUNT; i++) {
+        const x = (CANVAS_W / LANE_COUNT) * i;
+        ctx.beginPath();
+        ctx.setLineDash([6, 14]);
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, CANVAS_H);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // Ground line
+      ctx.strokeStyle = 'rgba(0,229,255,0.2)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, PLAYER_Y + PLAYER_H + 5);
+      ctx.lineTo(CANVAS_W, PLAYER_Y + PLAYER_H + 5);
+      ctx.stroke();
+    }
+
+    function drawHUD() {
+      // Score
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 18px Segoe UI, Arial';
+      ctx.textAlign = 'left';
+      ctx.fillText('Score: ' + score, 12, 28);
+      // Speed
+      ctx.fillStyle = '#00e5ff';
+      ctx.font = '13px Segoe UI, Arial';
+      ctx.textAlign = 'right';
+      ctx.fillText('LV ' + Math.floor((speed - 3) / 0.5 + 1), CANVAS_W - 12, 28);
+      ctx.textAlign = 'left';
+    }
+
+    // ── Spawn ──────────────────────────────────────────────────────────────
+    function spawnObstacle() {
+      const lane = Math.floor(Math.random() * LANE_COUNT);
+      obstacles.push({
+        x: LANES[lane],
+        y: -OBS_H - 10,
+        lane,
+        speed: speed + Math.random() * 1.5,
+        type: Math.floor(Math.random() * OBS_TYPES.length),
+      });
+    }
+
+    function spawnParticles(x, y, color) {
+      for (let i = 0; i < 16; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const v = 2 + Math.random() * 3;
+        particles.push({
+          x: x + PLAYER_W / 2,
+          y: y + PLAYER_H / 2,
+          vx: Math.cos(angle) * v,
+          vy: Math.sin(angle) * v,
+          r: 3 + Math.random() * 4,
+          color,
+          life: 1,
+        });
+      }
+    }
+
+    // ── Collision ──────────────────────────────────────────────────────────
+    function rectsOverlap(ax, ay, aw, ah, bx, by, bw, bh) {
+      return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+    }
+
+    function checkCollisions() {
+      for (const ob of obstacles) {
+        if (rectsOverlap(player.x + 4, PLAYER_Y + 4, PLAYER_W - 8, PLAYER_H - 8,
+                         ob.x + 4, ob.y + 4, OBS_W - 8, OBS_H - 8)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // ── Player movement ────────────────────────────────────────────────────
+    function moveLane(dir) {
+      const newLane = player.lane + dir;
+      if (newLane >= 0 && newLane < LANE_COUNT) {
+        player.lane = newLane;
+        player.x = LANES[player.lane];
+      }
+    }
+
+    // ── Game loop ──────────────────────────────────────────────────────────
+    function gameLoop() {
+      if (!alive) return;
+      frameCount++;
+
+      // Keyboard input (with repeat throttle)
+      const now = Date.now();
+      if ((keys['ArrowLeft'] || keys['a'] || keys['A']) && now - (lastKeyTime.left || 0) > 180) {
+        moveLane(-1); lastKeyTime.left = now;
+      }
+      if ((keys['ArrowRight'] || keys['d'] || keys['D']) && now - (lastKeyTime.right || 0) > 180) {
+        moveLane(1); lastKeyTime.right = now;
+      }
+
+      // Increase difficulty
+      if (frameCount % 300 === 0) {
+        speed = Math.min(speed + 0.5, 14);
+        spawnInterval = Math.max(spawnInterval - 5, 30);
+      }
+
+      // Spawn obstacles
+      if (frameCount % spawnInterval === 0) spawnObstacle();
+
+      // Move obstacles
+      obstacles.forEach(ob => { ob.y += ob.speed; });
+      obstacles = obstacles.filter(ob => ob.y < CANVAS_H + 40);
+
+      // Move particles
+      for (const p of particles) {
+        p.x += p.vx; p.y += p.vy; p.life -= 0.04;
+      }
+      particles = particles.filter(p => p.life > 0);
+
+      // Collision
+      if (checkCollisions()) {
+        alive = false;
+        spawnParticles(player.x, PLAYER_Y, '#ff4081');
+        spawnParticles(player.x, PLAYER_Y, '#ffea00');
+        draw();
+        setTimeout(showGameOver, 600);
+        return;
+      }
+
+      draw();
+      animId = requestAnimationFrame(gameLoop);
+    }
+
+    function draw() {
+      drawBackground();
+      drawParticles();
+      obstacles.forEach(drawObstacle);
+      if (alive) drawPlayer(player.x);
+      drawHUD();
+    }
+
+    // ── Score counter ──────────────────────────────────────────────────────
+    function startScoreCounter() {
+      scoreIntervalId = setInterval(() => {
+        if (alive) score++;
+      }, 100);
+    }
+
+    // ── Game states ────────────────────────────────────────────────────────
+    function startGame() {
+      running = true;
+      alive = true;
+      score = 0;
+      frameCount = 0;
+      speed = 3;
+      spawnInterval = 80;
+      obstacles = [];
+      particles = [];
+      player.lane = 2;
+      player.x = LANES[2];
+      leftHeld = false;
+      rightHeld = false;
+      keys = {};
+
+      document.getElementById('start-screen').classList.add('hidden');
+      document.getElementById('gameover-screen').classList.add('hidden');
+
+      startScoreCounter();
+      animId = requestAnimationFrame(gameLoop);
+    }
+
+    function showGameOver() {
+      clearInterval(scoreIntervalId);
+      if (score > hiScore) {
+        hiScore = score;
+        localStorage.setItem(HI_KEY, hiScore);
+        document.getElementById('hi-score').textContent = hiScore;
+      }
+      document.getElementById('final-score').textContent = score;
+      document.getElementById('hi-label').textContent = 'Best: ' + hiScore;
+      document.getElementById('gameover-screen').classList.remove('hidden');
+
+      // Trigger interstitial ad (placeholder)
+      // window.SDK && window.SDK.showInterstitial({ gameId: 'YOUR_GAME_ID' });
+      window.__lastGameScore = score; // for E2E tests
+    }
+
+    // ── Controls ────────────────────────────────────────────────────────────
+    document.addEventListener('keydown', e => { keys[e.key] = true; });
+    document.addEventListener('keyup', e => { keys[e.key] = false; });
+
+    document.getElementById('start-btn').addEventListener('click', startGame);
+    document.getElementById('restart-btn').addEventListener('click', startGame);
+    document.getElementById('menu-btn').addEventListener('click', () => {
+      cancelAnimationFrame(animId);
+      clearInterval(scoreIntervalId);
+      document.getElementById('gameover-screen').classList.add('hidden');
+      document.getElementById('start-screen').classList.remove('hidden');
+      running = false;
+      // Draw idle canvas
+      drawBackground();
+      ctx.fillStyle = 'rgba(0,229,255,0.3)';
+      ctx.font = 'bold 32px Segoe UI';
+      ctx.textAlign = 'center';
+      ctx.fillText('DODGE RUSH', CANVAS_W / 2, CANVAS_H / 2 - 20);
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.font = '16px Segoe UI';
+      ctx.fillText('Press START to play', CANVAS_W / 2, CANVAS_H / 2 + 20);
+      ctx.textAlign = 'left';
+    });
+
+    // Mobile move — single tap per button press
+    const leftBtn = document.getElementById('left-btn');
+    const rightBtn = document.getElementById('right-btn');
+
+    function setupMobileBtn(btn, dir) {
+      let holdTimer = null;
+      btn.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        if (!alive || !running) return;
+        moveLane(dir);
+        holdTimer = setInterval(() => { if (alive) moveLane(dir); }, 220);
+      });
+      btn.addEventListener('pointerup', () => { clearInterval(holdTimer); });
+      btn.addEventListener('pointercancel', () => { clearInterval(holdTimer); });
+    }
+    setupMobileBtn(leftBtn, -1);
+    setupMobileBtn(rightBtn, 1);
+
+    // ── Init ───────────────────────────────────────────────────────────────
+    document.getElementById('hi-score').textContent = hiScore;
+
+    // Draw idle canvas
+    drawBackground();
+    ctx.fillStyle = 'rgba(0,229,255,0.35)';
+    ctx.font = 'bold 36px Segoe UI, Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('⚡ DODGE RUSH', CANVAS_W / 2, CANVAS_H / 2);
+    ctx.textAlign = 'left';
+
+    // GameMonetize SDK placeholder
+    // Replace with actual integration when your game is live on GameMonetize
+    window.__adReady = true; // flag for E2E tests
+  </script>
+</body>
+</html>

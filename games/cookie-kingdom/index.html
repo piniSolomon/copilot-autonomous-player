@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cookie Kingdom — Idle Clicker Game</title>
+  <meta name="description" content="Build your Cookie Kingdom! Click to bake cookies, buy upgrades, and grow your empire. Free idle clicker game." />
+  <meta name="keywords" content="cookie clicker, idle game, clicker game, free browser game" />
+  <meta property="og:title" content="Cookie Kingdom — Idle Clicker Game" />
+  <meta property="og:description" content="Build your Cookie Kingdom! Click to bake cookies, buy upgrades, and grow your empire." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://pini-solomon-globalen.github.io/copilot-autonomous-player/games/cookie-kingdom/" />
+  <meta property="og:image" content="https://pini-solomon-globalen.github.io/copilot-autonomous-player/games/cookie-kingdom/preview.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Cookie Kingdom — Idle Clicker Game" />
+  <meta name="twitter:description" content="Build your Cookie Kingdom! Click to bake cookies and grow your empire." />
+  <link rel="canonical" href="https://pini-solomon-globalen.github.io/copilot-autonomous-player/games/cookie-kingdom/" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #1a0a00;
+      --surface: #2d1500;
+      --surface2: #3d1f00;
+      --accent: #ff8c00;
+      --accent2: #ffb347;
+      --text: #ffe8cc;
+      --muted: #a06030;
+      --green: #4caf50;
+      --radius: 12px;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    header {
+      background: var(--surface);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid var(--accent);
+    }
+    header h1 { font-size: 1.4rem; color: var(--accent); }
+    #total-display {
+      text-align: center;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 99px;
+      padding: 4px 16px;
+      font-weight: bold;
+      font-size: 0.95rem;
+    }
+
+    /* AD BANNER TOP */
+    .ad-banner {
+      background: var(--surface2);
+      border: 1px dashed var(--muted);
+      text-align: center;
+      padding: 8px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 1px;
+    }
+    .ad-banner-label { font-size: 0.65rem; display: block; margin-bottom: 2px; }
+
+    .game-layout {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 0;
+      min-height: calc(100vh - 120px);
+    }
+    @media (max-width: 700px) {
+      .game-layout { grid-template-columns: 1fr; }
+      #shop-panel { order: 2; }
+      #main-panel { order: 1; }
+    }
+
+    /* MAIN CLICK AREA */
+    #main-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding: 24px 20px;
+    }
+    #score-box {
+      text-align: center;
+    }
+    #score-box .label { font-size: 0.9rem; color: var(--muted); }
+    #cookie-count {
+      font-size: 2.8rem;
+      font-weight: bold;
+      color: var(--accent2);
+      line-height: 1.1;
+    }
+    #cps-display { font-size: 0.9rem; color: var(--muted); margin-top: 4px; }
+
+    #cookie-btn {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      border: 4px solid var(--accent);
+      background: radial-gradient(circle at 40% 35%, #ffcc80, #ff8c00 70%, #cc5500);
+      cursor: pointer;
+      font-size: 80px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.08s, box-shadow 0.08s;
+      box-shadow: 0 0 30px rgba(255,140,0,0.4);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      position: relative;
+      overflow: visible;
+    }
+    #cookie-btn:active, #cookie-btn.clicked {
+      transform: scale(0.93);
+      box-shadow: 0 0 10px rgba(255,140,0,0.2);
+    }
+    .float-text {
+      position: absolute;
+      font-weight: bold;
+      color: var(--accent2);
+      font-size: 1.1rem;
+      pointer-events: none;
+      animation: floatUp 0.8s ease-out forwards;
+      text-shadow: 0 1px 3px #000;
+    }
+    @keyframes floatUp {
+      0%   { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-60px) scale(1.3); }
+    }
+
+    #prestige-info {
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    /* AD SIDE */
+    .ad-side {
+      background: var(--surface2);
+      border: 1px dashed var(--muted);
+      min-height: 250px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 4px;
+      padding: 12px;
+      border-radius: var(--radius);
+      margin: 20px 0;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    /* SHOP */
+    #shop-panel {
+      background: var(--surface);
+      border-left: 2px solid var(--surface2);
+      padding: 16px;
+      overflow-y: auto;
+    }
+    #shop-panel h2 {
+      font-size: 1rem;
+      color: var(--accent);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .upgrade-item {
+      background: var(--surface2);
+      border: 1px solid var(--muted);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .upgrade-item:hover:not(.locked) { border-color: var(--accent); background: #4d2500; }
+    .upgrade-item.locked { opacity: 0.45; cursor: not-allowed; }
+    .upgrade-icon { font-size: 1.8rem; flex-shrink: 0; }
+    .upgrade-info { flex: 1; min-width: 0; }
+    .upgrade-name { font-weight: bold; font-size: 0.9rem; }
+    .upgrade-desc { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+    .upgrade-cost {
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: var(--accent2);
+      margin-top: 4px;
+    }
+    .upgrade-owned {
+      font-size: 0.75rem;
+      color: var(--green);
+      margin-top: 2px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 10px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      border-top: 1px solid var(--surface2);
+    }
+    a { color: var(--accent2); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🍪 Cookie Kingdom</h1>
+    <div id="total-display">Total: <span id="all-time-count">0</span></div>
+  </header>
+
+  <!-- Ad Banner Top -->
+  <div class="ad-banner" id="ad-top">
+    <span class="ad-banner-label">ADVERTISEMENT</span>
+    <!-- GameMonetize SDK: replace with actual ad tag -->
+    <div id="gamemonetize-top" style="min-height:50px; display:flex; align-items:center; justify-content:center; width:100%;">
+      <span>[Ad Banner 728×90]</span>
+    </div>
+  </div>
+
+  <div class="game-layout">
+    <div id="main-panel">
+      <div id="score-box">
+        <div class="label">🍪 Cookies</div>
+        <div id="cookie-count">0</div>
+        <div id="cps-display">per second: 0</div>
+      </div>
+
+      <button id="cookie-btn" aria-label="Click to bake a cookie" title="Click to bake cookies!">🍪</button>
+
+      <!-- Ad Side (shown on desktop) -->
+      <div class="ad-side" id="ad-side">
+        <span class="ad-banner-label">ADVERTISEMENT</span>
+        <div id="gamemonetize-side" style="min-width:160px; min-height:200px; display:flex; align-items:center; justify-content:center;">
+          <span>[Ad 160×200]</span>
+        </div>
+      </div>
+
+      <div id="prestige-info" aria-live="polite"></div>
+    </div>
+
+    <div id="shop-panel">
+      <h2>🏪 Upgrades</h2>
+      <div id="shop-list"></div>
+    </div>
+  </div>
+
+  <footer>
+    <a href="../../index.html">← Back to Games</a> &nbsp;|&nbsp;
+    Cookie Kingdom v1.0 &nbsp;|&nbsp;
+    <span id="save-status">Auto-saved</span>
+  </footer>
+
+  <script>
+    // ── State ──────────────────────────────────────────────────────────────
+    const SAVE_KEY = 'ck_save_v1';
+    let state = {
+      cookies: 0,
+      allTime: 0,
+      cps: 0,
+      clickPower: 1,
+      upgrades: {},
+    };
+
+    const UPGRADES = [
+      {
+        id: 'cursor',
+        name: 'Magic Cursor',
+        icon: '👆',
+        desc: 'Adds +1 cookie/click automatically',
+        baseCost: 15,
+        cpsBonus: 0.1,
+        clickBonus: 1,
+        costMult: 1.15,
+      },
+      {
+        id: 'grandma',
+        name: 'Grandma',
+        icon: '👵',
+        desc: 'A kindly grandma who bakes 2 cookies/sec',
+        baseCost: 100,
+        cpsBonus: 2,
+        clickBonus: 0,
+        costMult: 1.15,
+      },
+      {
+        id: 'farm',
+        name: 'Cookie Farm',
+        icon: '🌾',
+        desc: 'Grows cookie plants: 10 cookies/sec',
+        baseCost: 500,
+        cpsBonus: 10,
+        clickBonus: 0,
+        costMult: 1.15,
+      },
+      {
+        id: 'factory',
+        name: 'Cookie Factory',
+        icon: '🏭',
+        desc: 'Industrial scale: 50 cookies/sec',
+        baseCost: 3000,
+        cpsBonus: 50,
+        clickBonus: 0,
+        costMult: 1.15,
+      },
+      {
+        id: 'mine',
+        name: 'Cookie Mine',
+        icon: '⛏️',
+        desc: 'Mines chocolate chips: 200 cookies/sec',
+        baseCost: 10000,
+        cpsBonus: 200,
+        clickBonus: 0,
+        costMult: 1.15,
+      },
+      {
+        id: 'spaceship',
+        name: 'Cookie Rocket',
+        icon: '🚀',
+        desc: 'Space-baked cookies: 1000 cookies/sec',
+        baseCost: 50000,
+        cpsBonus: 1000,
+        clickBonus: 0,
+        costMult: 1.15,
+      },
+      {
+        id: 'power',
+        name: 'Power Click',
+        icon: '⚡',
+        desc: '+5 cookies per click',
+        baseCost: 200,
+        cpsBonus: 0,
+        clickBonus: 5,
+        costMult: 1.4,
+      },
+      {
+        id: 'golden',
+        name: 'Golden Cookie',
+        icon: '🌟',
+        desc: '+20 cookies per click',
+        baseCost: 1500,
+        cpsBonus: 0,
+        clickBonus: 20,
+        costMult: 1.4,
+      },
+    ];
+
+    // ── Helpers ────────────────────────────────────────────────────────────
+    function fmt(n) {
+      if (n >= 1e12) return (n / 1e12).toFixed(2) + ' T';
+      if (n >= 1e9)  return (n / 1e9).toFixed(2) + ' B';
+      if (n >= 1e6)  return (n / 1e6).toFixed(2) + ' M';
+      if (n >= 1e3)  return (n / 1e3).toFixed(1) + ' K';
+      return Math.floor(n).toString();
+    }
+
+    function upgradeCount(id) { return state.upgrades[id] || 0; }
+
+    function upgradeCost(u) {
+      const owned = upgradeCount(u.id);
+      return Math.ceil(u.baseCost * Math.pow(u.costMult, owned));
+    }
+
+    function recalc() {
+      let cps = 0, cp = 1;
+      UPGRADES.forEach(u => {
+        const owned = upgradeCount(u.id);
+        cps += u.cpsBonus * owned;
+        cp  += u.clickBonus * owned;
+      });
+      state.cps = cps;
+      state.clickPower = cp;
+    }
+
+    // ── Save / Load ────────────────────────────────────────────────────────
+    function save() {
+      try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+        document.getElementById('save-status').textContent = 'Saved ✓';
+        setTimeout(() => {
+          document.getElementById('save-status').textContent = 'Auto-saved';
+        }, 1500);
+      } catch (e) { /* storage unavailable */ }
+    }
+
+    function load() {
+      try {
+        const raw = localStorage.getItem(SAVE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          Object.assign(state, parsed);
+        }
+      } catch (e) { /* corrupt save, start fresh */ }
+      recalc();
+    }
+
+    // ── UI ─────────────────────────────────────────────────────────────────
+    function renderScores() {
+      document.getElementById('cookie-count').textContent = fmt(state.cookies);
+      document.getElementById('all-time-count').textContent = fmt(state.allTime);
+      document.getElementById('cps-display').textContent = `per second: ${fmt(state.cps)}`;
+    }
+
+    function renderShop() {
+      const list = document.getElementById('shop-list');
+      list.innerHTML = '';
+      UPGRADES.forEach(u => {
+        const cost = upgradeCost(u);
+        const owned = upgradeCount(u.id);
+        const canAfford = state.cookies >= cost;
+        const div = document.createElement('div');
+        div.className = 'upgrade-item' + (canAfford ? '' : ' locked');
+        div.setAttribute('data-id', u.id);
+        div.setAttribute('role', 'button');
+        div.setAttribute('aria-label', `Buy ${u.name} for ${fmt(cost)} cookies`);
+        div.setAttribute('tabindex', canAfford ? '0' : '-1');
+        div.innerHTML = `
+          <div class="upgrade-icon">${u.icon}</div>
+          <div class="upgrade-info">
+            <div class="upgrade-name">${u.name}</div>
+            <div class="upgrade-desc">${u.desc}</div>
+            <div class="upgrade-cost">🍪 ${fmt(cost)}</div>
+            ${owned > 0 ? `<div class="upgrade-owned">Owned: ${owned}</div>` : ''}
+          </div>`;
+        if (canAfford) {
+          div.addEventListener('click', () => buyUpgrade(u.id));
+          div.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') buyUpgrade(u.id); });
+        }
+        list.appendChild(div);
+      });
+    }
+
+    // ── Actions ────────────────────────────────────────────────────────────
+    function addCookies(n, source) {
+      state.cookies += n;
+      state.allTime += n;
+      renderScores();
+    }
+
+    function buyUpgrade(id) {
+      const u = UPGRADES.find(x => x.id === id);
+      if (!u) return;
+      const cost = upgradeCost(u);
+      if (state.cookies < cost) return;
+      state.cookies -= cost;
+      state.upgrades[id] = (state.upgrades[id] || 0) + 1;
+      recalc();
+      renderScores();
+      renderShop();
+      save();
+    }
+
+    // Cookie click with floating "+N" text
+    const cookieBtn = document.getElementById('cookie-btn');
+    cookieBtn.addEventListener('click', function(e) {
+      addCookies(state.clickPower, 'click');
+      this.classList.add('clicked');
+      setTimeout(() => this.classList.remove('clicked'), 80);
+
+      // Floating text
+      const span = document.createElement('span');
+      span.className = 'float-text';
+      span.textContent = '+' + fmt(state.clickPower);
+      const rect = this.getBoundingClientRect();
+      span.style.left = (e.clientX - rect.left - 12) + 'px';
+      span.style.top = (e.clientY - rect.top - 20) + 'px';
+      this.appendChild(span);
+      setTimeout(() => span.remove(), 820);
+
+      renderShop(); // refresh affordability
+    });
+
+    // ── Game Loop ──────────────────────────────────────────────────────────
+    let lastTick = Date.now();
+    function gameTick() {
+      const now = Date.now();
+      const dt = (now - lastTick) / 1000;
+      lastTick = now;
+      if (state.cps > 0) {
+        addCookies(state.cps * dt, 'passive');
+      }
+      requestAnimationFrame(gameTick);
+    }
+
+    // Render shop at lower frequency (500ms) to avoid constant DOM churn
+    setInterval(renderShop, 500);
+
+    // Auto-save every 10 seconds
+    setInterval(save, 10_000);
+
+    // Prestige hint
+    function updatePrestige() {
+      const info = document.getElementById('prestige-info');
+      if (state.allTime >= 1_000_000) {
+        info.textContent = '🌟 Prestige available! (coming soon)';
+      }
+    }
+    setInterval(updatePrestige, 5000);
+
+    // ── Init ───────────────────────────────────────────────────────────────
+    load();
+    renderScores();
+    renderShop();
+    requestAnimationFrame(gameTick);
+
+    // GameMonetize SDK placeholder
+    // Replace this block with actual GameMonetize integration:
+    // Load: <script src="https://api.gamemonetize.com/gmapi.js"> ... end-script
+    // Then: window.SDK = new GameMonetizeSDK({ gameId: 'YOUR_GAME_ID' });
+    // SDK.showBanner({ placement: 'top', container: 'gamemonetize-top' });
+    window.__adReady = true; // flag for E2E tests
+  </script>
+</body>
+</html>
