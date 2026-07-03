@@ -253,7 +253,7 @@
 <body>
   <header>
     <h1>🎮 Free Web Games</h1>
-    <p>10 instant casual games — no download, no install, no sign-up</p>
+    <p>11 instant casual games — no download, no install, no sign-up</p>
   </header>
 
   <!-- Ad banner top -->
@@ -469,8 +469,27 @@
           <span class="play-btn" style="background:#263238">▶ Play Now</span>
         </div>
       </a>
+
+      <!-- Game 11: Tic Tac Toe -->
+      <a href="games/tic-tac-toe/index.html" class="game-card" aria-label="Play Tic Tac Toe — play vs AI">
+        <div class="game-thumb" style="background: linear-gradient(135deg, #0097a7, #26c6da); font-size: 3rem;">
+          ❌
+          <span class="game-thumb-badge" style="background:#00838f">VS AI</span>
+          <span class="game-thumb-badge" style="background:#e91e63;right:8px;left:auto;">NEW!</span>
+        </div>
+        <div class="game-info">
+          <h2>❌ Tic Tac Toe</h2>
+          <p>Classic Tic Tac Toe with 3 AI difficulty levels. Easy, Medium, or unbeatable Hard. Track your win record!</p>
+          <div class="game-tags">
+            <span class="tag">Strategy</span>
+            <span class="tag">VS AI</span>
+            <span class="tag">Classic</span>
+            <span class="tag">Mobile</span>
+          </div>
+          <span class="play-btn" style="background:#00838f">▶ Play Now</span>
+        </div>
+      </a>
     </div>
-    <div class="ad-mid">
       <span class="ad-label">ADVERTISEMENT</span>
       <div id="ad-mid" style="min-height:90px; display:flex; align-items:center; justify-content:center; width:100%;">
         <!-- GameMonetize rectangle: replace with actual SDK call -->
@@ -523,6 +542,7 @@
       <a href="games/color-merge/index.html">🔮 Color Merge</a>
       <a href="games/snake/index.html">🐍 Snake</a>
       <a href="games/typing-speed/index.html">⌨️ Typing Speed</a>
+      <a href="games/tic-tac-toe/index.html">❌ Tic Tac Toe</a>
       <a href="https://github.com/piniSolomon/copilot-autonomous-player">GitHub</a>
     </div>
     <div>© 2026 Free Web Games — All games are free to play</div>
@@ -552,7 +572,8 @@
         'games/reaction-test/index.html',
         'games/color-merge/index.html',
         'games/snake/index.html',
-        'games/typing-speed/index.html'
+        'games/typing-speed/index.html',
+        'games/tic-tac-toe/index.html'
       ];
       window.location.href = games[Math.floor(Math.random() * games.length)];
     });

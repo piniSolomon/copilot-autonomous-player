@@ -21,9 +21,9 @@ test.describe('Landing Page', () => {
     await expect(canonical).toHaveAttribute('href', /copilot-autonomous-player/);
   });
 
-  test('shows ten game cards', async ({ page }) => {
+  test('shows eleven game cards', async ({ page }) => {
     const cards = page.locator('.game-card');
-    await expect(cards).toHaveCount(10);
+    await expect(cards).toHaveCount(11);
   });
 
   test('Cookie Kingdom card links to correct page', async ({ page }) => {
@@ -66,6 +66,12 @@ test.describe('Landing Page', () => {
     const tsCard = page.locator('.game-card[href*="typing-speed"]');
     await expect(tsCard).toBeVisible();
     await expect(tsCard).toHaveAttribute('href', /typing-speed/);
+  });
+
+  test('Tic Tac Toe card links to correct page', async ({ page }) => {
+    const tttCard = page.locator('.game-card[href*="tic-tac-toe"]');
+    await expect(tttCard).toBeVisible();
+    await expect(tttCard).toHaveAttribute('href', /tic-tac-toe/);
   });
 
   test('has structured data (JSON-LD)', async ({ page }) => {
@@ -128,7 +134,7 @@ test.describe('Landing Page', () => {
     await page.reload();
     // Both game cards should still be visible
     const cards = page.locator('.game-card');
-    await expect(cards).toHaveCount(10);
+    await expect(cards).toHaveCount(11);
     for (const card of await cards.all()) {
       await expect(card).toBeVisible();
       const box = await card.boundingBox();

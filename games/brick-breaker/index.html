@@ -667,7 +667,6 @@
       }
     }, 5000);
   </script>
-  <script id="gamemonetize-sdk" src="https://api.gamemonetize.com/sdk.js" async></script>
   <script>
     (function () {
       var STORAGE_KEYS = {
@@ -1089,7 +1088,7 @@
           if (!ball.stuck) {
             continue;
           }
-          var speed = LEVEL_DEFS[state.level].speed;
+          var speed = LEVEL_DEFS[state.level].speed * (state.slowActive ? SLOW_FACTOR : 1);
           var angle = -Math.PI / 2 + (Math.random() * 0.6 - 0.3);
           ball.speed = speed;
           ball.vx = Math.cos(angle) * speed;
@@ -1270,10 +1269,12 @@
       }
 
       function expirePowerEffects(now) {
+        var changed = false;
         if (state.wideUntil && now >= state.wideUntil) {
           state.wideUntil = 0;
           state.paddle.w = state.paddle.baseW;
           showToast('Wide paddle expired');
+          changed = true;
         }
         if (state.slowActive && now >= state.slowUntil) {
           for (var i = 0; i < state.balls.length; i += 1) {
@@ -1283,6 +1284,10 @@
           state.slowActive = false;
           state.slowUntil = 0;
           showToast('Speed restored');
+          changed = true;
+        }
+        if (changed) {
+          updateHud();
         }
       }
 
@@ -1841,6 +1846,22 @@
         }
       }
 
+      function mountGameMonetizeSdk() {
+        if (window.location.protocol !== 'https:') {
+          window.__adReady = true;
+          return;
+        }
+        var script = document.createElement('script');
+        script.id = 'gamemonetize-sdk';
+        script.src = 'https://api.gamemonetize.com/sdk.js';
+        script.async = true;
+        script.onerror = function () {
+          window.__adReady = true;
+          window.sdk = null;
+        };
+        document.head.appendChild(script);
+      }
+
       function shareScore() {
         var text = 'I scored ' + state.score + ' in Brick Breaker — Breakout Arcade and reached level ' + (state.level + 1) + '! Play it at https://pinisolomon.github.io/copilot-autonomous-player/games/brick-breaker/';
         if (navigator.share) {
@@ -2017,6 +2038,7 @@
         secondaryLabel: 'Share',
         secondaryAction: 'share'
       });
+      mountGameMonetizeSdk();
       updateHud();
       render(0);
       requestAnimationFrame(loop);
