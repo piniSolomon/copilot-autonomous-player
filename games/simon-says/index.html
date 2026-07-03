@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0e27" />
+  <title>Simon Says — Pattern Memory</title>
+  <meta name="description" content="Play Simon Says — Pattern Memory, a polished dark-mode memory game with glowing color pads, musical tones, difficulty modes, and local high scores." />
+  <meta name="keywords" content="Simon Says, memory game, pattern memory, HTML5 game, browser game, sound game" />
+  <meta property="og:title" content="Simon Says — Pattern Memory" />
+  <meta property="og:description" content="Watch the sequence, hear the tones, and repeat the growing pattern in this polished Simon Says memory game." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://pinisolomon.github.io/copilot-autonomous-player/games/simon-says/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Simon Says — Pattern Memory" />
+  <meta name="twitter:description" content="A complete dark-theme Simon Says game with musical tones, local score tracking, retry/strict modes, and responsive mobile play." />
+  <link rel="canonical" href="https://pinisolomon.github.io/copilot-autonomous-player/games/simon-says/" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230a0e27'/%3E%3Ctext x='10' y='44' font-size='34'%3E%F0%9F%A7%A0%3C/text%3E%3C/svg%3E" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0a0e27;
+      --bg-2: #050816;
+      --panel: rgba(14, 20, 46, 0.9);
+      --panel-2: rgba(20, 28, 62, 0.92);
+      --panel-3: rgba(255, 255, 255, 0.05);
+      --line: rgba(157, 176, 255, 0.18);
+      --line-strong: rgba(226, 234, 255, 0.3);
+      --text: #f5f7ff;
+      --muted: #a6b0e6;
+      --accent: #79e0ff;
+      --accent-2: #9d7bff;
+      --success: #68f3b3;
+      --warning: #ffd86f;
+      --danger: #ff7a90;
+      --shadow: 0 26px 64px rgba(0, 0, 0, 0.42);
+      --radius: 28px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+    }
+
+    body {
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% 0%, rgba(121, 224, 255, 0.16), transparent 28%),
+        radial-gradient(circle at 85% 12%, rgba(157, 123, 255, 0.16), transparent 26%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+      padding: max(14px, env(safe-area-inset-top)) 12px max(16px, env(safe-area-inset-bottom));
+      display: flex;
+      justify-content: center;
+      user-select: none;
+      -webkit-user-select: none;
+      overflow-x: hidden;
+    }
+
+    button {
+      font: inherit;
+      border: 0;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .page-shell {
+      width: min(100%, 980px);
+      min-height: calc(100vh - max(28px, env(safe-area-inset-top)) - max(32px, env(safe-area-inset-bottom)));
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 4px 2px;
+    }
+
+    .back-link {
+      font-weight: 800;
+      letter-spacing: 0.01em;
+    }
+
+    .back-link:hover,
+    .back-link:focus-visible {
+      text-decoration: underline;
+    }
+
+    .top-note {
+      color: var(--muted);
+      font-size: 0.92rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .top-note .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 0 16px rgba(121, 224, 255, 0.8);
+    }
+
+    .game-shell {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(18, 25, 56, 0.98), rgba(8, 12, 28, 0.98));
+      border: 1px solid var(--line);
+      border-radius: 32px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .game-shell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(135deg, rgba(121, 224, 255, 0.06), transparent 32%, rgba(157, 123, 255, 0.07));
+    }
+
+    .hero,
+    .control-strip,
+    .status-strip,
+    .dashboard,
+    .board-panel,
+    .ad-slot,
+    .overlay {
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      text-align: center;
+      padding-top: 6px;
+    }
+
+    .eyebrow {
+      margin: 0;
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(2.2rem, 8vw, 3.6rem);
+      line-height: 0.95;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      background: linear-gradient(135deg, #ffffff 10%, var(--accent) 45%, #c3b6ff 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .subtitle {
+      margin: 0 auto;
+      max-width: 640px;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .control-strip,
+    .status-strip,
+    .dashboard,
+    .board-panel,
+    .ad-slot {
+      background: rgba(255, 255, 255, 0.038);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 24px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .control-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      padding: 14px;
+    }
+
+    .mode-group,
+    .action-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .mode-btn,
+    .ghost-btn,
+    .primary-btn {
+      min-height: 48px;
+      padding: 0 16px;
+      border-radius: 16px;
+      transition: transform 130ms ease, opacity 130ms ease, background 130ms ease, border-color 130ms ease, box-shadow 130ms ease, filter 130ms ease;
+    }
+
+    .mode-btn,
+    .ghost-btn {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .mode-btn.selected {
+      background: linear-gradient(135deg, rgba(121, 224, 255, 0.18), rgba(157, 123, 255, 0.2));
+      border-color: rgba(121, 224, 255, 0.55);
+      box-shadow: 0 0 0 2px rgba(121, 224, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .primary-btn {
+      color: #061122;
+      font-weight: 900;
+      border: 1px solid transparent;
+      background: linear-gradient(135deg, #7df2ff 0%, #8f80ff 100%);
+      box-shadow: 0 12px 24px rgba(125, 242, 255, 0.18);
+    }
+
+    .mode-btn:hover,
+    .mode-btn:focus-visible,
+    .ghost-btn:hover,
+    .ghost-btn:focus-visible,
+    .primary-btn:hover,
+    .primary-btn:focus-visible,
+    .pad:hover,
+    .pad:focus-visible {
+      transform: translateY(-1px);
+      outline: none;
+      filter: brightness(1.04);
+    }
+
+    .mode-btn:active,
+    .ghost-btn:active,
+    .primary-btn:active,
+    .pad:active {
+      transform: translateY(0) scale(0.985);
+    }
+
+    .status-strip {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 14px;
+      align-items: center;
+      padding: 14px 16px;
+    }
+
+    .phase-pill,
+    .progress-pill,
+    .mode-value {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 0 14px;
+      border-radius: 999px;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .phase-pill[data-phase="watch"] {
+      color: var(--warning);
+      border-color: rgba(255, 216, 111, 0.32);
+      background: rgba(255, 216, 111, 0.09);
+    }
+
+    .phase-pill[data-phase="your-turn"] {
+      color: var(--success);
+      border-color: rgba(104, 243, 179, 0.32);
+      background: rgba(104, 243, 179, 0.09);
+    }
+
+    .phase-pill[data-phase="ready"],
+    .phase-pill[data-phase="paused"],
+    .phase-pill[data-phase="nice!"] {
+      color: var(--accent);
+      border-color: rgba(121, 224, 255, 0.32);
+      background: rgba(121, 224, 255, 0.08);
+    }
+
+    .status-copy {
+      min-width: 0;
+    }
+
+    .status-heading {
+      font-size: 1.06rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .status-sub {
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 20px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .stat-card span {
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 800;
+    }
+
+    .stat-card strong {
+      font-size: clamp(1.45rem, 4vw, 2rem);
+      line-height: 1;
+    }
+
+    .stat-card small {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+    }
+
+    .board-panel {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .board-frame {
+      display: flex;
+      justify-content: center;
+    }
+
+    .board {
+      position: relative;
+      width: min(100%, 560px);
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: clamp(14px, 3.5vw, 24px);
+      padding: clamp(12px, 3vw, 22px);
+    }
+
+    .pad {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 30px;
+      border: 2px solid rgba(255, 255, 255, 0.08);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: flex-start;
+      color: #ffffff;
+      font-weight: 900;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        inset 0 -10px 28px rgba(0, 0, 0, 0.18),
+        0 18px 40px rgba(0, 0, 0, 0.22);
+      opacity: 0.86;
+      filter: saturate(0.95) brightness(0.78);
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .pad::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 44%, rgba(0, 0, 0, 0.08));
+      mix-blend-mode: screen;
+      opacity: 0.55;
+      pointer-events: none;
+    }
+
+    .pad::after {
+      content: "";
+      position: absolute;
+      inset: auto -18% -28% auto;
+      width: 60%;
+      height: 60%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.24), transparent 60%);
+      pointer-events: none;
+    }
+
+    .pad.active {
+      opacity: 1;
+      filter: saturate(1.18) brightness(1.18);
+      border-color: rgba(255, 255, 255, 0.94);
+      box-shadow:
+        0 0 0 4px rgba(255, 255, 255, 0.1),
+        0 0 36px var(--glow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.22),
+        0 20px 44px rgba(0, 0, 0, 0.3);
+    }
+
+    .pad.flash-burst {
+      animation: pulse 220ms ease;
+    }
+
+    .pad-label {
+      position: relative;
+      z-index: 1;
+      font-size: clamp(1.05rem, 3vw, 1.45rem);
+      letter-spacing: 0.02em;
+    }
+
+    .pad-note {
+      position: relative;
+      z-index: 1;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.88);
+    }
+
+    .pad.red {
+      --glow: rgba(255, 94, 128, 0.75);
+      background: linear-gradient(135deg, #ff556e 0%, #d11346 100%);
+    }
+
+    .pad.blue {
+      --glow: rgba(80, 164, 255, 0.75);
+      background: linear-gradient(135deg, #4bb4ff 0%, #1256d2 100%);
+    }
+
+    .pad.green {
+      --glow: rgba(84, 255, 170, 0.75);
+      background: linear-gradient(135deg, #43e595 0%, #129e77 100%);
+    }
+
+    .pad.yellow {
+      --glow: rgba(255, 220, 91, 0.82);
+      background: linear-gradient(135deg, #ffe35d 0%, #ffb31a 100%);
+      color: #392200;
+    }
+
+    .pad.yellow .pad-note {
+      color: rgba(57, 34, 0, 0.76);
+    }
+
+    .center-display {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: clamp(118px, 28vw, 150px);
+      height: clamp(118px, 28vw, 150px);
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.16), rgba(10, 14, 39, 0.95) 64%);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      text-align: center;
+      pointer-events: none;
+      z-index: 3;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .center-label,
+    .center-mode {
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .center-round {
+      font-size: clamp(2rem, 7vw, 3.2rem);
+      line-height: 1;
+      font-weight: 900;
+    }
+
+    .center-emoji {
+      font-size: 1.3rem;
+      line-height: 1;
+    }
+
+    .legend-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .legend-chip {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .legend-swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      box-shadow: 0 0 18px currentColor;
+    }
+
+    .legend-chip.red { color: #ff5f81; }
+    .legend-chip.blue { color: #4baeff; }
+    .legend-chip.green { color: #4be7aa; }
+    .legend-chip.yellow { color: #ffd55d; }
+
+    .ad-slot {
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border-style: dashed;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(3, 5, 14, 0.72);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms ease;
+      z-index: 8;
+    }
+
+    .overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .overlay-card {
+      width: min(100%, 460px);
+      background: linear-gradient(180deg, rgba(19, 27, 59, 0.98), rgba(8, 12, 28, 0.98));
+      border: 1px solid rgba(255, 255, 255, 0.11);
+      border-radius: 28px;
+      padding: 22px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      text-align: center;
+    }
+
+    .overlay-badge {
+      align-self: center;
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--warning);
+      background: rgba(255, 216, 111, 0.1);
+      border: 1px solid rgba(255, 216, 111, 0.26);
+    }
+
+    .overlay-badge.strict {
+      color: var(--danger);
+      background: rgba(255, 122, 144, 0.12);
+      border-color: rgba(255, 122, 144, 0.28);
+    }
+
+    .overlay-title {
+      margin: 0;
+      font-size: clamp(1.6rem, 5vw, 2.2rem);
+      line-height: 1.05;
+    }
+
+    .overlay-message {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .overlay-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .overlay-stat {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 18px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .overlay-stat span {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .overlay-stat strong {
+      font-size: 1.35rem;
+      line-height: 1;
+    }
+
+    .overlay-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .overlay-actions .ghost-btn,
+    .overlay-actions .primary-btn {
+      min-width: 150px;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+      white-space: nowrap;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      55% { transform: scale(1.02); }
+      100% { transform: scale(1); }
+    }
+
+    @media (max-width: 760px) {
+      .status-strip {
+        grid-template-columns: 1fr;
+        justify-items: flex-start;
+      }
+
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+
+      .legend-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 520px) {
+      body {
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+
+      .game-shell {
+        padding: 14px;
+        border-radius: 26px;
+      }
+
+      .control-strip,
+      .board-panel,
+      .status-strip,
+      .dashboard,
+      .ad-slot {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+
+      .mode-group,
+      .action-group {
+        width: 100%;
+      }
+
+      .mode-group > *,
+      .action-group > * {
+        flex: 1 1 calc(50% - 10px);
+      }
+
+      .overlay-stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <div class="topbar">
+      <a class="back-link" href="../../index.html">← Back to Games</a>
+      <div class="top-note"><span class="dot"></span>Pattern grows every round</div>
+    </div>
+
+    <main class="game-shell">
+      <header class="hero">
+        <p class="eyebrow">Pattern Memory</p>
+        <h1>Simon Says</h1>
+        <p class="subtitle">Watch the glowing sequence, hear the notes, then tap it back in order before the melody grows again.</p>
+      </header>
+
+      <section class="control-strip" aria-label="Game controls">
+        <div class="mode-group" id="modeGroup" role="group" aria-label="Difficulty mode">
+          <button class="mode-btn selected" type="button" data-mode="normal" aria-pressed="true">Normal</button>
+          <button class="mode-btn" type="button" data-mode="fast" aria-pressed="false">Fast</button>
+          <button class="mode-btn" type="button" data-mode="strict" aria-pressed="false">Strict</button>
+        </div>
+        <div class="action-group">
+          <button class="ghost-btn" type="button" id="soundToggle">Sound: On</button>
+          <button class="ghost-btn" type="button" id="shareButton">Share</button>
+          <button class="primary-btn" type="button" id="startButton">Start</button>
+        </div>
+      </section>
+
+      <section class="status-strip" aria-live="polite">
+        <div class="phase-pill" id="phasePill" data-phase="ready">Ready</div>
+        <div class="status-copy">
+          <div class="status-heading" id="statusHeading">Press Start to begin.</div>
+          <div class="status-sub" id="statusSub">Patterns speed up after rounds 5, 10, and 15.</div>
+        </div>
+        <div class="progress-pill" id="progressPill">Round 0 · 🎵</div>
+      </section>
+
+      <section class="dashboard" aria-label="Game stats">
+        <article class="stat-card">
+          <span>High Score</span>
+          <strong id="highScoreValue">0</strong>
+          <small>Longest pattern saved on this device.</small>
+        </article>
+        <article class="stat-card">
+          <span>Games Played</span>
+          <strong id="gamesPlayedValue">0</strong>
+          <small>Total runs started locally.</small>
+        </article>
+        <article class="stat-card">
+          <span>Mode</span>
+          <strong class="mode-value" id="modeValue">Normal</strong>
+          <small id="modeNote">Standard pace with forgiving round retries.</small>
+        </article>
+      </section>
+
+      <section class="board-panel" aria-label="Simon Says board panel">
+        <div class="board-frame">
+          <div class="board" id="board" aria-label="Simon Says board">
+            <button class="pad red" type="button" data-pad="red" aria-label="Red pad, note E4">
+              <span class="pad-label">Red</span>
+              <span class="pad-note">E4 · 329Hz</span>
+            </button>
+            <button class="pad blue" type="button" data-pad="blue" aria-label="Blue pad, note A4">
+              <span class="pad-label">Blue</span>
+              <span class="pad-note">A4 · 440Hz</span>
+            </button>
+            <button class="pad green" type="button" data-pad="green" aria-label="Green pad, note C♯4">
+              <span class="pad-label">Green</span>
+              <span class="pad-note">C♯4 · 277Hz</span>
+            </button>
+            <button class="pad yellow" type="button" data-pad="yellow" aria-label="Yellow pad, note E5">
+              <span class="pad-label">Yellow</span>
+              <span class="pad-note">E5 · 659Hz</span>
+            </button>
+
+            <div class="center-display" aria-live="polite">
+              <div class="center-label">Round</div>
+              <div class="center-round" id="roundNumber">0</div>
+              <div class="center-emoji" id="milestoneEmoji">🎵</div>
+              <div class="center-mode" id="centerMode">Normal</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="legend-row" aria-hidden="true">
+          <div class="legend-chip red"><span class="legend-swatch" style="background:#ff5f81"></span>Red</div>
+          <div class="legend-chip blue"><span class="legend-swatch" style="background:#4baeff"></span>Blue</div>
+          <div class="legend-chip green"><span class="legend-swatch" style="background:#4be7aa"></span>Green</div>
+          <div class="legend-chip yellow"><span class="legend-swatch" style="background:#ffd55d"></span>Yellow</div>
+        </div>
+      </section>
+
+      <div class="ad-slot" id="gamemonetize-slot">[GameMonetize Banner]</div>
+
+      <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="overlayTitle" aria-describedby="overlayMessage">
+        <div class="overlay-card">
+          <div class="overlay-badge" id="overlayBadge">Retry</div>
+          <h2 class="overlay-title" id="overlayTitle">Pattern slipped!</h2>
+          <p class="overlay-message" id="overlayMessage">Watch the same sequence again and retry the round.</p>
+          <div class="overlay-stats">
+            <div class="overlay-stat"><span>Round</span><strong id="overlayRound">0</strong></div>
+            <div class="overlay-stat"><span>High Score</span><strong id="overlayHighScore">0</strong></div>
+            <div class="overlay-stat"><span>Games</span><strong id="overlayGames">0</strong></div>
+          </div>
+          <div class="overlay-actions">
+            <button class="primary-btn" type="button" id="overlayPrimary">Retry Round</button>
+            <button class="ghost-btn" type="button" id="overlaySecondary">Start Fresh</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <span class="sr-only" id="liveStatus" aria-live="assertive"></span>
+
+  <script>
+    (function () {
+      'use strict';
+
+      var STORAGE_KEYS = {
+        highScore: 'ss_high_score',
+        games: 'ss_games',
+        sound: 'ss_sound'
+      };
+
+      var PAD_MAP = {
+        red: { label: 'Red', freq: 329, note: 'E4' },
+        blue: { label: 'Blue', freq: 440, note: 'A4' },
+        green: { label: 'Green', freq: 277, note: 'C#4' },
+        yellow: { label: 'Yellow', freq: 659, note: 'E5' }
+      };
+
+      var MODES = {
+        normal: {
+          label: 'Normal',
+          speedFactor: 1,
+          strict: false,
+          note: 'Standard pace with forgiving round retries.'
+        },
+        fast: {
+          label: 'Fast',
+          speedFactor: 0.8,
+          strict: false,
+          note: 'Quicker flashes for a sharper memory challenge.'
+        },
+        strict: {
+          label: 'Strict',
+          speedFactor: 1,
+          strict: true,
+          note: 'One mistake sends you back to round 1.'
+        }
+      };
+
+      var SPEED_TIERS = [
+        { minRound: 16, flash: 320, gap: 110 },
+        { minRound: 11, flash: 390, gap: 145 },
+        { minRound: 6, flash: 470, gap: 180 },
+        { minRound: 1, flash: 560, gap: 220 }
+      ];
+
+      var state = {
+        mode: 'normal',
+        sequence: [],
+        round: 0,
+        inputIndex: 0,
+        phase: 'idle',
+        highScore: readNumber(STORAGE_KEYS.highScore, 0),
+        gamesPlayed: readNumber(STORAGE_KEYS.games, 0),
+        soundEnabled: readBoolean(STORAGE_KEYS.sound, true),
+        audioContext: null,
+        timers: [],
+        isPaused: false,
+        overlayPrimaryAction: null,
+        overlaySecondaryAction: null,
+        copyResetTimer: null,
+        lastMistakeCount: 0
+      };
+
+      var elements = {
+        modeButtons: Array.prototype.slice.call(document.querySelectorAll('.mode-btn')),
+        pads: Array.prototype.slice.call(document.querySelectorAll('.pad')),
+        startButton: document.getElementById('startButton'),
+        shareButton: document.getElementById('shareButton'),
+        soundToggle: document.getElementById('soundToggle'),
+        phasePill: document.getElementById('phasePill'),
+        statusHeading: document.getElementById('statusHeading'),
+        statusSub: document.getElementById('statusSub'),
+        progressPill: document.getElementById('progressPill'),
+        highScoreValue: document.getElementById('highScoreValue'),
+        gamesPlayedValue: document.getElementById('gamesPlayedValue'),
+        modeValue: document.getElementById('modeValue'),
+        modeNote: document.getElementById('modeNote'),
+        roundNumber: document.getElementById('roundNumber'),
+        milestoneEmoji: document.getElementById('milestoneEmoji'),
+        centerMode: document.getElementById('centerMode'),
+        overlay: document.getElementById('overlay'),
+        overlayBadge: document.getElementById('overlayBadge'),
+        overlayTitle: document.getElementById('overlayTitle'),
+        overlayMessage: document.getElementById('overlayMessage'),
+        overlayRound: document.getElementById('overlayRound'),
+        overlayHighScore: document.getElementById('overlayHighScore'),
+        overlayGames: document.getElementById('overlayGames'),
+        overlayPrimary: document.getElementById('overlayPrimary'),
+        overlaySecondary: document.getElementById('overlaySecondary'),
+        liveStatus: document.getElementById('liveStatus')
+      };
+
+      var padButtons = elements.pads.reduce(function (acc, button) {
+        acc[button.dataset.pad] = button;
+        return acc;
+      }, {});
+
+      function readStorage(key) {
+        try {
+          return window.localStorage.getItem(key);
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function writeStorage(key, value) {
+        try {
+          window.localStorage.setItem(key, value);
+          return true;
+        } catch (error) {
+          return false;
+        }
+      }
+
+      function readNumber(key, fallback) {
+        var raw = readStorage(key);
+        var num = Number(raw);
+        return Number.isFinite(num) && num >= 0 ? num : fallback;
+      }
+
+      function readBoolean(key, fallback) {
+        var raw = readStorage(key);
+        if (raw === null) return fallback;
+        return raw === '1';
+      }
+
+      function schedule(fn, delay) {
+        var id = window.setTimeout(function () {
+          state.timers = state.timers.filter(function (timerId) {
+            return timerId !== id;
+          });
+          fn();
+        }, delay);
+        state.timers.push(id);
+        return id;
+      }
+
+      function clearTimers() {
+        while (state.timers.length) {
+          window.clearTimeout(state.timers.pop());
+        }
+      }
+
+      function announce(message) {
+        elements.liveStatus.textContent = '';
+        window.setTimeout(function () {
+          elements.liveStatus.textContent = message;
+        }, 10);
+      }
+
+      function notifySdk(methodName) {
+        try {
+          if (window.sdk && typeof window.sdk[methodName] === 'function') {
+            window.sdk[methodName]();
+          }
+        } catch (error) {
+          // Ignore ad SDK failures.
+        }
+      }
+
+      function getAudioContext() {
+        if (state.audioContext) return state.audioContext;
+        var AudioCtor = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtor) return null;
+        state.audioContext = new AudioCtor();
+        return state.audioContext;
+      }
+
+      function resumeAudioContext() {
+        var context = getAudioContext();
+        if (context && context.state === 'suspended') {
+          context.resume().catch(function () {});
+        }
+      }
+
+      function playTone(freq, durationMs) {
+        if (!state.soundEnabled) return;
+        var context = getAudioContext();
+        if (!context) return;
+
+        var now = context.currentTime;
+        var duration = durationMs / 1000;
+        var oscillator = context.createOscillator();
+        var gain = context.createGain();
+
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(freq, now);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.18, now + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+        oscillator.connect(gain);
+        gain.connect(context.destination);
+        oscillator.start(now);
+        oscillator.stop(now + duration + 0.04);
+      }
+
+      function clearActivePads() {
+        elements.pads.forEach(function (button) {
+          button.classList.remove('active');
+          button.classList.remove('flash-burst');
+        });
+      }
+
+      function flashPad(padId, durationMs) {
+        var button = padButtons[padId];
+        var pad = PAD_MAP[padId];
+        if (!button || !pad) return;
+
+        button.classList.add('active');
+        button.classList.remove('flash-burst');
+        void button.offsetWidth;
+        button.classList.add('flash-burst');
+        playTone(pad.freq, durationMs);
+
+        window.setTimeout(function () {
+          button.classList.remove('active');
+          button.classList.remove('flash-burst');
+        }, durationMs);
+      }
+
+      function randomPadId() {
+        var keys = Object.keys(PAD_MAP);
+        return keys[Math.floor(Math.random() * keys.length)];
+      }
+
+      function getMilestoneEmoji(round) {
+        if (round >= 30) return '👑';
+        if (round >= 20) return '🏆';
+        if (round >= 15) return '💫';
+        if (round >= 10) return '⭐';
+        if (round >= 5) return '🌟';
+        return '🎵';
+      }
+
+      function getSpeedForRound(round) {
+        var tier = SPEED_TIERS[SPEED_TIERS.length - 1];
+        for (var i = 0; i < SPEED_TIERS.length; i += 1) {
+          if (round >= SPEED_TIERS[i].minRound) {
+            tier = SPEED_TIERS[i];
+            break;
+          }
+        }
+
+        var factor = MODES[state.mode].speedFactor;
+        return {
+          flash: Math.round(tier.flash * factor),
+          gap: Math.round(tier.gap * factor)
+        };
+      }
+
+      function setStatus(label, heading, subline) {
+        var phaseKey = label.toLowerCase().replace(/\s+/g, '-');
+        elements.phasePill.textContent = label;
+        elements.phasePill.dataset.phase = phaseKey;
+        elements.statusHeading.textContent = heading;
+        elements.statusSub.textContent = subline;
+      }
+
+      function updateHighScore(round) {
+        if (round > state.highScore) {
+          state.highScore = round;
+          writeStorage(STORAGE_KEYS.highScore, String(round));
+        }
+      }
+
+      function updateHud() {
+        var modeInfo = MODES[state.mode];
+        var progressText = 'Round ' + state.round + ' · ' + getMilestoneEmoji(state.round);
+
+        if (state.phase === 'input' && state.sequence.length) {
+          progressText = state.inputIndex + '/' + state.sequence.length + ' correct';
+        }
+
+        elements.modeButtons.forEach(function (button) {
+          var selected = button.dataset.mode === state.mode;
+          button.classList.toggle('selected', selected);
+          button.setAttribute('aria-pressed', selected ? 'true' : 'false');
+        });
+
+        elements.highScoreValue.textContent = String(state.highScore);
+        elements.gamesPlayedValue.textContent = String(state.gamesPlayed);
+        elements.modeValue.textContent = modeInfo.label;
+        elements.modeNote.textContent = modeInfo.note;
+        elements.soundToggle.textContent = 'Sound: ' + (state.soundEnabled ? 'On' : 'Off');
+        elements.roundNumber.textContent = String(state.round);
+        elements.milestoneEmoji.textContent = getMilestoneEmoji(state.round);
+        elements.centerMode.textContent = modeInfo.label;
+        elements.progressPill.textContent = progressText;
+        elements.startButton.textContent = state.phase === 'idle' ? 'Start' : 'Restart';
+      }
+
+      function hideOverlay() {
+        elements.overlay.classList.remove('show');
+      }
+
+      function showOverlay(options) {
+        elements.overlayBadge.textContent = options.badge;
+        elements.overlayBadge.classList.toggle('strict', !!options.strict);
+        elements.overlayTitle.textContent = options.title;
+        elements.overlayMessage.textContent = options.message;
+        elements.overlayRound.textContent = String(state.round);
+        elements.overlayHighScore.textContent = String(state.highScore);
+        elements.overlayGames.textContent = String(state.gamesPlayed);
+        elements.overlayPrimary.textContent = options.primaryLabel;
+        elements.overlaySecondary.textContent = options.secondaryLabel;
+        state.overlayPrimaryAction = options.onPrimary;
+        state.overlaySecondaryAction = options.onSecondary;
+        elements.overlay.classList.add('show');
+      }
+
+      function resetToReady() {
+        clearTimers();
+        clearActivePads();
+        hideOverlay();
+        state.sequence = [];
+        state.round = 0;
+        state.inputIndex = 0;
+        state.phase = 'idle';
+        state.lastMistakeCount = 0;
+        setStatus('Ready', 'Press Start to begin.', 'Patterns speed up after rounds 5, 10, and 15.');
+        updateHud();
+      }
+
+      function beginInputPhase() {
+        clearActivePads();
+        state.phase = 'input';
+        state.inputIndex = 0;
+        setStatus('Your Turn', 'Repeat the pattern.', 'Tap ' + state.sequence.length + ' notes in order.');
+        updateHud();
+        announce('Your turn.');
+      }
+
+      function playSequence() {
+        clearTimers();
+        clearActivePads();
+        hideOverlay();
+
+        if (state.isPaused) return;
+
+        state.phase = 'playback';
+        setStatus('Watch', 'Simon says…', 'Round ' + state.round + ' is playing now.');
+        updateHud();
+
+        var speed = getSpeedForRound(state.round);
+        var index = 0;
+
+        function step() {
+          if (state.isPaused) {
+            clearActivePads();
+            return;
+          }
+
+          if (index >= state.sequence.length) {
+            schedule(beginInputPhase, Math.max(170, Math.round(speed.gap * 0.85)));
+            return;
+          }
+
+          flashPad(state.sequence[index], speed.flash);
+          index += 1;
+          schedule(step, speed.flash + speed.gap);
+        }
+
+        step();
+      }
+
+      function startNextRound() {
+        if (state.isPaused) return;
+        state.sequence.push(randomPadId());
+        state.round = state.sequence.length;
+        state.inputIndex = 0;
+        updateHighScore(state.round);
+        updateHud();
+        announce('Watch round ' + state.round + '.');
+        playSequence();
+      }
+
+      function beginNewRun() {
+        clearTimers();
+        clearActivePads();
+        hideOverlay();
+        resumeAudioContext();
+        notifySdk('gameStart');
+        state.sequence = [];
+        state.round = 0;
+        state.inputIndex = 0;
+        state.phase = 'starting';
+        state.lastMistakeCount = 0;
+        state.gamesPlayed += 1;
+        writeStorage(STORAGE_KEYS.games, String(state.gamesPlayed));
+        setStatus('Watch', 'Get ready…', MODES[state.mode].note);
+        updateHud();
+        schedule(startNextRound, 350);
+      }
+
+      function handleMistake(expectedPadId, actualPadId) {
+        clearTimers();
+        clearActivePads();
+        state.lastMistakeCount += 1;
+
+        var expected = PAD_MAP[expectedPadId];
+        var actual = PAD_MAP[actualPadId];
+        var strictMode = MODES[state.mode].strict;
+
+        if (strictMode) {
+          state.phase = 'gameover';
+          setStatus('Watch', 'Pattern broken.', 'Strict mode sends you back to round 1.');
+          notifySdk('gameOver');
+          showOverlay({
+            badge: 'Game Over',
+            strict: true,
+            title: 'Strict mode says restart!',
+            message: 'You tapped ' + actual.label + ' instead of ' + expected.label + '. Your run ended at round ' + state.round + ' ' + getMilestoneEmoji(state.round) + '.',
+            primaryLabel: 'Restart from Round 1',
+            secondaryLabel: 'Back to Ready',
+            onPrimary: beginNewRun,
+            onSecondary: resetToReady
+          });
+          announce('Wrong button. Strict mode restart.');
+        } else {
+          state.phase = 'retry';
+          setStatus('Watch', 'Pattern slipped.', 'Watch the same round again, then retry.');
+          showOverlay({
+            badge: 'Retry',
+            strict: false,
+            title: 'Close — try that round again!',
+            message: 'You tapped ' + actual.label + ' instead of ' + expected.label + '. Normal and Fast modes let you replay the same pattern.',
+            primaryLabel: 'Retry Round',
+            secondaryLabel: 'Start Fresh',
+            onPrimary: function () {
+              hideOverlay();
+              schedule(playSequence, 220);
+            },
+            onSecondary: beginNewRun
+          });
+          announce('Wrong button. Retry the round.');
+        }
+
+        updateHud();
+      }
+
+      function handlePadPress(padId) {
+        resumeAudioContext();
+        if (state.phase !== 'input' || state.isPaused) return;
+
+        flashPad(padId, 230);
+
+        var expectedPadId = state.sequence[state.inputIndex];
+        if (padId !== expectedPadId) {
+          handleMistake(expectedPadId, padId);
+          return;
+        }
+
+        state.inputIndex += 1;
+        updateHud();
+
+        if (state.inputIndex >= state.sequence.length) {
+          state.phase = 'cleared';
+          setStatus('Nice!', 'Round cleared.', 'Get ready for one more note.');
+          announce('Round ' + state.round + ' cleared.');
+          schedule(startNextRound, Math.max(560, getSpeedForRound(state.round).gap + 420));
+          return;
+        }
+
+        setStatus('Your Turn', 'Keep the rhythm going.', state.inputIndex + ' of ' + state.sequence.length + ' correct.');
+      }
+
+      function setSoundEnabled(enabled) {
+        state.soundEnabled = enabled;
+        writeStorage(STORAGE_KEYS.sound, enabled ? '1' : '0');
+        updateHud();
+        announce('Sound ' + (enabled ? 'on.' : 'off.'));
+      }
+
+      function copyText(text) {
+        if (navigator.clipboard && window.isSecureContext && typeof navigator.clipboard.writeText === 'function') {
+          return navigator.clipboard.writeText(text);
+        }
+
+        return new Promise(function (resolve, reject) {
+          var area = document.createElement('textarea');
+          area.value = text;
+          area.setAttribute('readonly', '');
+          area.style.position = 'fixed';
+          area.style.opacity = '0';
+          area.style.left = '-9999px';
+          document.body.appendChild(area);
+          area.select();
+          area.setSelectionRange(0, area.value.length);
+
+          var copied = false;
+          try {
+            copied = document.execCommand('copy');
+          } catch (error) {
+            copied = false;
+          }
+
+          document.body.removeChild(area);
+          if (copied) {
+            resolve();
+          } else {
+            reject(new Error('copy-failed'));
+          }
+        });
+      }
+
+      function setShareButtonLabel(label) {
+        elements.shareButton.textContent = label;
+        if (state.copyResetTimer) {
+          window.clearTimeout(state.copyResetTimer);
+        }
+        state.copyResetTimer = window.setTimeout(function () {
+          elements.shareButton.textContent = 'Share';
+        }, 1800);
+      }
+
+      function shareScore() {
+        var round = state.round;
+        var emoji = getMilestoneEmoji(round);
+        var message = 'Simon Says — Pattern Memory: round ' + round + ' ' + emoji + ' | high score ' + state.highScore + ' | mode ' + MODES[state.mode].label + ' | https://pinisolomon.github.io/copilot-autonomous-player/games/simon-says/';
+
+        copyText(message).then(function () {
+          setShareButtonLabel('Copied!');
+          announce('Score copied to clipboard.');
+        }).catch(function () {
+          setShareButtonLabel('Copy failed');
+          announce('Unable to copy score.');
+        });
+      }
+
+      function switchMode(mode) {
+        if (!MODES[mode] || mode === state.mode) return;
+        state.mode = mode;
+        resetToReady();
+        setStatus('Ready', MODES[mode].label + ' mode ready.', MODES[mode].note);
+        updateHud();
+        announce(MODES[mode].label + ' mode selected.');
+      }
+
+      function handlePauseChange(paused) {
+        state.isPaused = paused;
+        clearTimers();
+        clearActivePads();
+
+        if (paused) {
+          setStatus('Paused', 'Game paused for ad break.', 'Press Start when the game resumes if needed.');
+          updateHud();
+          return;
+        }
+
+        if (state.phase === 'playback' || state.phase === 'retry') {
+          schedule(playSequence, 260);
+        } else if (state.phase === 'starting') {
+          schedule(startNextRound, 260);
+        }
+
+        if (state.phase !== 'idle' && state.phase !== 'gameover') {
+          updateHud();
+        } else {
+          setStatus('Ready', 'Back in rhythm.', MODES[state.mode].note);
+          updateHud();
+        }
+      }
+
+      elements.pads.forEach(function (button) {
+        button.addEventListener('click', function () {
+          handlePadPress(button.dataset.pad);
+        });
+      });
+
+      elements.modeButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          switchMode(button.dataset.mode);
+        });
+      });
+
+      elements.startButton.addEventListener('click', beginNewRun);
+      elements.soundToggle.addEventListener('click', function () {
+        setSoundEnabled(!state.soundEnabled);
+      });
+      elements.shareButton.addEventListener('click', shareScore);
+      elements.overlayPrimary.addEventListener('click', function () {
+        hideOverlay();
+        if (typeof state.overlayPrimaryAction === 'function') {
+          state.overlayPrimaryAction();
+        }
+      });
+      elements.overlaySecondary.addEventListener('click', function () {
+        hideOverlay();
+        if (typeof state.overlaySecondaryAction === 'function') {
+          state.overlaySecondaryAction();
+        }
+      });
+
+      document.addEventListener('keydown', function (event) {
+        var key = event.key.toLowerCase();
+        var padByKey = {
+          '1': 'red',
+          '2': 'blue',
+          '3': 'green',
+          '4': 'yellow',
+          'q': 'red',
+          'w': 'blue',
+          'a': 'green',
+          's': 'yellow'
+        };
+
+        if (key === ' ' || key === 'enter') {
+          if (elements.overlay.classList.contains('show')) {
+            event.preventDefault();
+            elements.overlayPrimary.click();
+            return;
+          }
+
+          if (state.phase === 'idle' || state.phase === 'gameover') {
+            event.preventDefault();
+            beginNewRun();
+          }
+          return;
+        }
+
+        if (padByKey[key]) {
+          event.preventDefault();
+          handlePadPress(padByKey[key]);
+        }
+      });
+
+      window.simonSaysHandlePause = handlePauseChange;
+      resetToReady();
+      announce('Simon Says ready.');
+    })();
+  </script>
+
+  <script>
+    window.SDK_OPTIONS = {
+      gameId: 'ss_simon_says_01',
+      onEvent: function (event) {
+        switch (event.name) {
+          case 'SDK_GAME_PAUSE':
+            window.__gamePaused = true;
+            if (typeof window.simonSaysHandlePause === 'function') window.simonSaysHandlePause(true);
+            break;
+          case 'SDK_GAME_START':
+            window.__gamePaused = false;
+            if (typeof window.simonSaysHandlePause === 'function') window.simonSaysHandlePause(false);
+            break;
+          case 'SDK_READY':
+            window.__adReady = true;
+            break;
+        }
+      }
+    };
+
+    window.initGmSdk = function (SDK) {
+      window.sdk = SDK;
+      window.__adReady = true;
+      if (SDK && typeof SDK.gameStart === 'function') {
+        SDK.gameStart();
+      }
+    };
+
+    window.setTimeout(function () {
+      if (!window.__adReady) {
+        window.sdk = null;
+        window.__adReady = true;
+      }
+    }, 5000);
+  </script>
+  <script id="gamemonetize-sdk" src="https://api.gamemonetize.com/sdk.js" async></script>
+</body>
+</html>
