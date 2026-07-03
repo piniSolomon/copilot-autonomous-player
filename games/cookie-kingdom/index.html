@@ -504,6 +504,7 @@
     // ── Save / Load ────────────────────────────────────────────────────────
     function save() {
       try {
+        state.lastSaveTime = Date.now();
         localStorage.setItem(SAVE_KEY, JSON.stringify(state));
         document.getElementById('save-status').textContent = 'Saved ✓';
         setTimeout(() => {
@@ -521,6 +522,31 @@
         }
       } catch (e) { /* corrupt save, start fresh */ }
       recalc();
+      // Offline progress: award cookies for time away (50% of CPS rate)
+      if (state.lastSaveTime && state.cps > 0) {
+        const elapsed = (Date.now() - state.lastSaveTime) / 1000;
+        if (elapsed > 30) { // at least 30s away
+          const maxOffline = 8 * 3600; // cap at 8 hours
+          const offlineSec = Math.min(elapsed, maxOffline);
+          const offlineEarnings = Math.floor(state.cps * offlineSec * 0.5);
+          if (offlineEarnings > 0) {
+            state.cookies += offlineEarnings;
+            state.allTime += offlineEarnings;
+            showOfflineBonus(offlineEarnings, offlineSec);
+          }
+        }
+      }
+    }
+
+    function showOfflineBonus(amount, seconds) {
+      const mins = Math.floor(seconds / 60);
+      const hours = Math.floor(mins / 60);
+      const timeStr = hours > 0 ? `${hours}h ${mins % 60}m` : `${mins}m`;
+      const banner = document.createElement('div');
+      banner.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,#1e88e5,#1565c0);color:white;padding:24px 32px;border-radius:16px;text-align:center;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.5);animation:slideIn 0.4s ease-out;';
+      banner.innerHTML = `<div style="font-size:1.5rem;margin-bottom:8px;">🌙 Welcome Back!</div><div>You were away for <b>${timeStr}</b></div><div style="font-size:1.3rem;margin-top:8px;color:#ffeb3b;">+${fmt(amount)} cookies earned offline</div><div style="margin-top:12px;font-size:0.8rem;opacity:0.7;">50% of production while away (max 8h)</div>`;
+      document.body.appendChild(banner);
+      setTimeout(() => banner.remove(), 5000);
     }
 
     // ── UI ─────────────────────────────────────────────────────────────────
