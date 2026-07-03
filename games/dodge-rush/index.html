@@ -231,6 +231,7 @@
         <button id="rewarded-extra-btn" aria-label="Watch ad for extra life">📺 Watch Ad — Extra Life</button>
         <button class="btn btn-primary" id="restart-btn">🔄 PLAY AGAIN</button>
         <button class="btn btn-secondary" id="menu-btn">🏠 Menu</button>
+        <div id="leaderboard" style="width:100%;margin-top:4px;"></div>
       </div>
     </div>
 
@@ -665,18 +666,45 @@
         localStorage.setItem(HI_KEY, hiScore);
         document.getElementById('hi-score').textContent = hiScore;
       }
+      // Save to local leaderboard (top 10)
+      saveToLeaderboard(score);
+      
       document.getElementById('final-score').textContent = score;
       document.getElementById('hi-label').textContent = 'Best: ' + hiScore;
 
       // Show interstitial ad, then reveal game-over screen
       showInterstitialAd(function() {
         document.getElementById('gameover-screen').classList.remove('hidden');
+        renderLeaderboard();
         // Reset rewarded button for this game-over
         var rb = document.getElementById('rewarded-extra-btn');
         if (rb) { rb.disabled = false; rb.textContent = '📺 Watch Ad — Extra Life'; }
       });
 
       window.__lastGameScore = score; // for E2E tests
+    }
+
+    // ── Local Leaderboard ──────────────────────────────────────────────────
+    function getLeaderboard() {
+      try { return JSON.parse(localStorage.getItem('dr_leaderboard') || '[]'); } catch(e) { return []; }
+    }
+    function saveToLeaderboard(s) {
+      var lb = getLeaderboard();
+      lb.push({ score: s, date: new Date().toLocaleDateString() });
+      lb.sort(function(a, b) { return b.score - a.score; });
+      lb = lb.slice(0, 10);
+      localStorage.setItem('dr_leaderboard', JSON.stringify(lb));
+    }
+    function renderLeaderboard() {
+      var lb = getLeaderboard();
+      if (lb.length === 0) return;
+      var el = document.getElementById('leaderboard');
+      if (!el) return;
+      el.innerHTML = '<h3 style="margin:8px 0 4px;font-size:0.9rem;color:var(--accent)">🏆 Your Top Scores</h3>';
+      lb.forEach(function(entry, i) {
+        var medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1)+'.';
+        el.innerHTML += '<div style="font-size:0.8rem;padding:2px 0;color:rgba(255,255,255,0.7)">' + medal + ' ' + entry.score + ' <span style="opacity:0.4;font-size:0.7rem">(' + entry.date + ')</span></div>';
+      });
     }
 
     // ── Controls ────────────────────────────────────────────────────────────
