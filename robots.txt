@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://pinisolomon.github.io/copilot-autonomous-player/sitemap.xml
