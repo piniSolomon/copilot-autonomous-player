@@ -8,10 +8,10 @@ Two free HTML5 browser games with ad monetization, built to earn the first dolla
 
 ## Games
 
-| Game | Description | Live URL |
-|------|-------------|----------|
-| 🍪 Cookie Kingdom | Idle clicker — bake cookies, buy upgrades | [Play](https://pinisolomon.github.io/copilot-autonomous-player/games/cookie-kingdom/) |
-| ⚡ Dodge Rush | Endless obstacle dodge game | [Play](https://pinisolomon.github.io/copilot-autonomous-player/games/dodge-rush/) |
+| Game | Description | GitHub Pages | itch.io |
+|------|-------------|--------------|---------|
+| 🍪 Cookie Kingdom | Idle clicker — bake cookies, buy upgrades | [Play](https://pinisolomon.github.io/copilot-autonomous-player/games/cookie-kingdom/) | [Play on itch.io](https://coinempire-game.itch.io/cookie-kingdom) |
+| ⚡ Dodge Rush | Endless obstacle dodge game | [Play](https://pinisolomon.github.io/copilot-autonomous-player/games/dodge-rush/) | [Play on itch.io](https://coinempire-game.itch.io/dodge-rush) |
 
 ---
 
@@ -48,17 +48,14 @@ Deploys automatically on every push to `main` via GitHub Actions.
 
 Live URL: `https://pinisolomon.github.io/copilot-autonomous-player/`
 
-### itch.io (manual)
-Game bundles are ready in `tmp/itch-bundles/`:
-- `cookie-kingdom.zip` — upload to itch.io → "HTML game" → set viewport 1200×800
-- `dodge-rush.zip` — upload to itch.io → "HTML game" → set viewport 480×600
+### itch.io (live ✅)
 
-Steps:
-1. Go to https://itch.io/game/new
-2. Upload the zip, set "Kind of project" = HTML
-3. Check "This file will be played in the browser"
-4. Set embed size to match the game canvas
-5. Publish
+Both games are published and playable on itch.io:
+- **Cookie Kingdom**: https://coinempire-game.itch.io/cookie-kingdom (1200×800 embed)
+- **Dodge Rush**: https://coinempire-game.itch.io/dodge-rush (480×600 embed)
+
+Account: `coinempire-game` on itch.io
+Game bundles in `tmp/itch-bundles/` (for re-uploading if needed)
 
 ---
 
