@@ -6,5 +6,12 @@
   "inspector_model": "Claude:Haiku-4.5",
   "initial_sha": "5a96b4106c97e5e7dee630220cf3134449cbdb0e",
   "created_at": "2026-07-03T16:18:00+03:00",
-  "history": []
+  "history": [
+    {
+      "iteration": 1,
+      "verdict": "FAIL",
+      "timestamp": "2026-07-03T16:38:56+03:00",
+      "reason": "Missing deployments (itch.io, GitHub Pages), ad integration only placeholders, OG images missing"
+    }
+  ]
 }
