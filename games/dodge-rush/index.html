@@ -590,7 +590,29 @@
     setupMobileBtn(rightBtn, 1);
 
     // ── GameMonetize Ad SDK Integration ────────────────────────────────────
-    // Called by GameMonetize SDK when it's ready
+    // SDK_OPTIONS pattern (required for ads to serve)
+    window.SDK_OPTIONS = {
+      gameId: "dr_dodge_rush_01", // TODO: replace with real gameId from GameMonetize dashboard
+      onEvent: function(event) {
+        switch (event.name) {
+          case "SDK_GAME_PAUSE":
+            // Pause game & mute audio during ads
+            window.__gamePaused = true;
+            if (typeof cancelAnimationFrame !== 'undefined' && animId) cancelAnimationFrame(animId);
+            break;
+          case "SDK_GAME_START":
+            // Resume game after ad
+            window.__gamePaused = false;
+            break;
+          case "SDK_READY":
+            // SDK loaded and ready
+            window.__adReady = true;
+            break;
+        }
+      }
+    };
+
+    // Legacy callback (some SDK versions still call this)
     window['initGmSdk'] = function(SDK) {
       window.sdk = SDK;
       window.__adReady = true;
@@ -603,7 +625,7 @@
         window.sdk = null;
         window.__adReady = true; // fallback ready flag for E2E tests
       }
-    }, 4000);
+    }, 5000);
 
     // ── Interstitial helper ──────────────────────────────────────────────
     function showInterstitialAd(onComplete) {
@@ -654,7 +676,7 @@
     ctx.textAlign = 'left';
 
   </script>
-  <!-- GameMonetize SDK — loads asynchronously, fires initGmSdk() when ready -->
-  <script src="https://api.gamemonetize.com/sdk.js" async></script>
+  <!-- GameMonetize SDK — loaded via SDK_OPTIONS pattern -->
+  <script id="gamemonetize-sdk" src="https://api.gamemonetize.com/sdk.js" async></script>
 </body>
 </html>
