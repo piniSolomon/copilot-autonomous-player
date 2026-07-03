@@ -399,6 +399,7 @@
           <p class="tiny">Final score</p>
           <div class="overlay-actions">
             <button id="overlay-undo-btn" class="undo-btn" data-undo-button type="button">📺 Watch Ad → Undo last move</button>
+            <button id="share-nm-btn" type="button" style="background:#1e88e5;color:white;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:0.85rem;">📋 Share Score</button>
             <button id="try-again-btn" type="button">Try Again</button>
           </div>
         </div>
@@ -973,6 +974,17 @@
       document.getElementById('new-game-btn').addEventListener('click', startNewGame);
       document.getElementById('win-new-game-btn').addEventListener('click', startNewGame);
       document.getElementById('try-again-btn').addEventListener('click', startNewGame);
+      document.getElementById('share-nm-btn').addEventListener('click', function() {
+        var sc = document.getElementById('final-score').textContent;
+        var text = '🔢 Number Merge 🔢\nScore: ' + sc + '\nCan you reach 2048?\nPlay free: https://pinisolomon.github.io/copilot-autonomous-player/games/number-merge/';
+        if (navigator.clipboard) {
+          var btn = this;
+          navigator.clipboard.writeText(text).then(function() {
+            btn.textContent = '✅ Copied!';
+            setTimeout(function() { btn.textContent = '📋 Share Score'; }, 2000);
+          });
+        }
+      });
       document.getElementById('continue-btn').addEventListener('click', handleContinue);
       undoButtons.forEach(function(button) {
         button.addEventListener('click', showRewardedUndo);
