@@ -231,6 +231,7 @@
         <button id="rewarded-extra-btn" aria-label="Watch ad for extra life">📺 Watch Ad — Extra Life</button>
         <button class="btn btn-primary" id="restart-btn">🔄 PLAY AGAIN</button>
         <button class="btn btn-secondary" id="menu-btn">🏠 Menu</button>
+        <button id="share-score-btn" style="display:block;width:100%;margin-top:4px;padding:8px;background:#1e88e5;color:white;border:none;border-radius:6px;font-size:0.85rem;cursor:pointer;">📋 Share Score</button>
         <div id="leaderboard" style="width:100%;margin-top:4px;"></div>
       </div>
     </div>
@@ -742,6 +743,18 @@
       ctx.font = '16px Segoe UI';
       ctx.fillText('Press START to play', CANVAS_W / 2, CANVAS_H / 2 + 20);
       ctx.textAlign = 'left';
+    });
+
+    // Share score button
+    document.getElementById('share-score-btn').addEventListener('click', function() {
+      const sc = document.getElementById('final-score').textContent;
+      const text = `⚡ Dodge Rush ⚡\nScore: ${sc}\nCan you beat me?\nPlay free: https://pinisolomon.github.io/copilot-autonomous-player/games/dodge-rush/`;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+          this.textContent = '✅ Copied!';
+          setTimeout(() => { this.textContent = '📋 Share Score'; }, 2000);
+        });
+      }
     });
 
     // Mobile move — single tap per button press
