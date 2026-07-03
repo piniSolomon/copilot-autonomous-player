@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <title>Merge Drop</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #1a1a2e;
+      --panel: rgba(18, 21, 44, 0.92);
+      --panel-2: rgba(24, 28, 58, 0.9);
+      --ink: #f5f7ff;
+      --muted: #9ea6d9;
+      --glow: #56f0ff;
+      --glow-2: #ff5db1;
+      --danger: #ff4b6e;
+      --success: #69f0ae;
+      --shadow: 0 18px 42px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 20% 0%, rgba(86, 240, 255, 0.16), transparent 34%),
+        radial-gradient(circle at 80% 12%, rgba(255, 93, 177, 0.18), transparent 28%),
+        linear-gradient(180deg, #232544 0%, #17182d 48%, #10111f 100%);
+      color: var(--ink);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+    }
+
+    button {
+      border: 0;
+      border-radius: 18px;
+      color: var(--ink);
+      background: linear-gradient(180deg, rgba(90, 104, 255, 0.95), rgba(77, 56, 198, 0.95));
+      padding: 14px 16px;
+      font: inherit;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: transform 120ms ease, filter 120ms ease, opacity 120ms ease;
+      touch-action: manipulation;
+    }
+
+    button:active { transform: translateY(1px) scale(0.985); }
+    button:hover { filter: brightness(1.08); }
+    button:disabled { opacity: 0.45; cursor: default; filter: none; }
+
+    #game-shell {
+      width: min(100vw, 420px);
+      height: 100dvh;
+      padding: calc(10px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+    }
+
+    .hud {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: start;
+      gap: 10px;
+    }
+
+    .hud-card {
+      min-height: 72px;
+      border-radius: 22px;
+      padding: 12px 14px;
+      background: linear-gradient(180deg, rgba(22, 26, 52, 0.95), rgba(14, 18, 40, 0.92));
+      border: 1px solid rgba(118, 130, 255, 0.2);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    .hud-card.right { text-align: right; }
+
+    .label {
+      display: block;
+      font-size: 0.76rem;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .score-value {
+      font-size: 1.7rem;
+      font-weight: 900;
+      line-height: 1;
+      text-shadow: 0 0 18px rgba(86, 240, 255, 0.18);
+    }
+
+    .next-wrap {
+      min-width: 114px;
+      text-align: center;
+      padding-inline: 12px;
+    }
+
+    #next-preview {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      margin: 0 auto 6px;
+      display: grid;
+      place-items: center;
+      font-size: 1.9rem;
+      background: radial-gradient(circle at 30% 28%, rgba(255,255,255,0.48), rgba(255,255,255,0.06) 38%, rgba(255,255,255,0.02) 70%), #2f375c;
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,0.08), 0 0 18px rgba(86, 240, 255, 0.18);
+      animation: bob 2.8s ease-in-out infinite;
+    }
+
+    #peek-preview {
+      min-height: 20px;
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 0.76rem;
+    }
+
+    .peek-bubble {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+      font-size: 1rem;
+    }
+
+    #canvas-wrap {
+      position: relative;
+      flex: 1;
+      min-height: 380px;
+      border-radius: 26px;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(26, 30, 61, 0.95), rgba(14, 16, 33, 0.96)),
+        radial-gradient(circle at top, rgba(86, 240, 255, 0.08), transparent 45%);
+      border: 1px solid rgba(130, 143, 255, 0.22);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03), var(--shadow);
+    }
+
+    #game {
+      width: 100%;
+      height: 100%;
+      display: block;
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    #center-message {
+      position: absolute;
+      left: 50%;
+      top: 14px;
+      transform: translateX(-50%);
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(12, 16, 35, 0.76);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #e9ecff;
+      font-size: 0.82rem;
+      text-align: center;
+      backdrop-filter: blur(8px);
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms ease;
+    }
+
+    #center-message.show { opacity: 1; }
+
+    .control-row {
+      display: grid;
+      grid-template-columns: 1fr 0.82fr 54px;
+      gap: 10px;
+    }
+
+    #reward-btn {
+      background: linear-gradient(180deg, rgba(38, 191, 174, 0.96), rgba(28, 126, 121, 0.96));
+      font-size: 0.93rem;
+      line-height: 1.1;
+    }
+
+    #drop-btn {
+      background: linear-gradient(180deg, rgba(255, 132, 92, 0.98), rgba(232, 82, 89, 0.98));
+      font-size: 1rem;
+    }
+
+    #sound-btn {
+      padding-inline: 0;
+      font-size: 1.25rem;
+      display: grid;
+      place-items: center;
+    }
+
+    .banner-placeholder {
+      height: 52px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(16, 19, 41, 0.94), rgba(11, 14, 31, 0.94));
+      border: 1px dashed rgba(255, 255, 255, 0.16);
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: 0.84rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(8, 10, 24, 0.76);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      transition: opacity 180ms ease, visibility 180ms ease;
+      z-index: 20;
+    }
+
+    .overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .panel {
+      width: 100%;
+      padding: 22px 18px 18px;
+      border-radius: 24px;
+      background: linear-gradient(180deg, rgba(28, 32, 66, 0.98), rgba(12, 15, 34, 0.97));
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 24px 54px rgba(0, 0, 0, 0.48);
+      text-align: center;
+    }
+
+    .panel h2 {
+      margin: 0 0 10px;
+      font-size: 2rem;
+      letter-spacing: 0.01em;
+    }
+
+    .panel p {
+      margin: 7px 0;
+      color: #dce1ff;
+    }
+
+    .overlay-actions {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .hint-list {
+      text-align: left;
+      margin: 14px 0 0;
+      padding-left: 18px;
+      color: #d7dcff;
+      line-height: 1.45;
+      font-size: 0.95rem;
+    }
+
+    .tiny {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    @keyframes bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 0 rgba(255, 93, 177, 0.15), inset 0 0 0 2px rgba(255,255,255,0.08); }
+      50% { box-shadow: 0 0 26px rgba(255, 93, 177, 0.32), inset 0 0 0 2px rgba(255,255,255,0.12); }
+    }
+
+    .urgent {
+      animation: pulseGlow 850ms ease-in-out infinite;
+    }
+  </style>
+</head>
+<body>
+  <main id="game-shell" aria-label="Merge Drop game">
+    <section class="hud">
+      <div class="hud-card">
+        <span class="label">Score</span>
+        <div id="score" class="score-value">0</div>
+      </div>
+      <div class="hud-card next-wrap">
+        <span class="label">Next</span>
+        <div id="next-preview" aria-live="polite">🍒</div>
+        <div id="peek-preview">Watch an ad to reveal the next 3.</div>
+      </div>
+      <div class="hud-card right">
+        <span class="label">Best</span>
+        <div id="high-score" class="score-value">0</div>
+      </div>
+    </section>
+
+    <section id="canvas-wrap" aria-label="Game board">
+      <canvas id="game"></canvas>
+      <div id="center-message" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="control-row" aria-label="Game controls">
+      <button id="reward-btn" type="button" aria-label="Watch ad to preview the next three drops">📺 Watch Ad → Peek 3</button>
+      <button id="drop-btn" type="button" aria-label="Drop current fruit">Drop Fruit</button>
+      <button id="sound-btn" type="button" aria-label="Toggle sound">🔊</button>
+    </section>
+
+    <div class="banner-placeholder" aria-label="Advertisement banner placeholder">Banner Ad Placeholder</div>
+
+    <section id="tooltip-overlay" class="overlay hidden" aria-label="How to play">
+      <div class="panel">
+        <h2>How to play</h2>
+        <p>Stack matching fruit to evolve them into giant melons and crowns.</p>
+        <ul class="hint-list">
+          <li>Tap or move to aim horizontally.</li>
+          <li>Tap again or press <strong>Drop Fruit</strong> to release.</li>
+          <li>Same-tier fruit merge when they touch.</li>
+          <li>Keep everything below the red line for 2 seconds.</li>
+        </ul>
+        <div class="overlay-actions">
+          <button id="tooltip-close" type="button">Let’s Drop</button>
+          <div class="tiny">Tip: watch an ad to reveal your next 3 fruit.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="gameover-overlay" class="overlay hidden" aria-label="Game over">
+      <div class="panel">
+        <h2>Game Over</h2>
+        <p>Final score: <strong id="final-score">0</strong></p>
+        <p>Best score: <strong id="final-best-score">0</strong></p>
+        <p class="tiny">One more round. One bigger watermelon.</p>
+        <div class="overlay-actions">
+          <button id="play-again-btn" type="button">Play Again</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function() {
+      const STORAGE = {
+        highScore: 'merge-drop-high-score',
+        seenHelp: 'merge-drop-seen-help',
+        soundOn: 'merge-drop-sound-on'
+      };
+
+      const FRUITS = [
+        { name: 'Cherry', emoji: '🍒', radius: 15, color: '#ff6b8a', stroke: '#ffd0de', points: 10 },
+        { name: 'Grape', emoji: '🍇', radius: 20, color: '#a065ff', stroke: '#e5d4ff', points: 20 },
+        { name: 'Orange', emoji: '🍊', radius: 28, color: '#ff9b3f', stroke: '#ffe0bf', points: 40 },
+        { name: 'Lemon', emoji: '🍋', radius: 34, color: '#ffe45c', stroke: '#fff5b6', points: 80 },
+        { name: 'Apple', emoji: '🍎', radius: 40, color: '#ff5a67', stroke: '#ffd2d7', points: 160 },
+        { name: 'Peach', emoji: '🍑', radius: 48, color: '#ff9fb1', stroke: '#ffe0e7', points: 320 },
+        { name: 'Kiwi', emoji: '🥝', radius: 55, color: '#78c850', stroke: '#dbffb8', points: 640 },
+        { name: 'Pear', emoji: '🍐', radius: 63, color: '#8bd76c', stroke: '#eefcd9', points: 1280 },
+        { name: 'Melon', emoji: '🍈', radius: 72, color: '#95dca5', stroke: '#efffee', points: 2560 },
+        { name: 'Watermelon', emoji: '🍉', radius: 82, color: '#56da7f', stroke: '#daffe4', points: 5120 },
+        { name: 'Crown', emoji: '👑', radius: 92, color: '#ffd54f', stroke: '#fff4ba', points: 10240 }
+      ];
+
+      const canvas = document.getElementById('game');
+      const canvasWrap = document.getElementById('canvas-wrap');
+      const ctx = canvas.getContext('2d');
+
+      const scoreEl = document.getElementById('score');
+      const highScoreEl = document.getElementById('high-score');
+      const nextPreviewEl = document.getElementById('next-preview');
+      const peekPreviewEl = document.getElementById('peek-preview');
+      const messageEl = document.getElementById('center-message');
+      const dropBtn = document.getElementById('drop-btn');
+      const rewardBtn = document.getElementById('reward-btn');
+      const soundBtn = document.getElementById('sound-btn');
+      const tooltipOverlay = document.getElementById('tooltip-overlay');
+      const gameoverOverlay = document.getElementById('gameover-overlay');
+      const finalScoreEl = document.getElementById('final-score');
+      const finalBestScoreEl = document.getElementById('final-best-score');
+
+      const world = {
+        width: 360,
+        height: 560,
+        wall: 10,
+        floorPad: 12,
+        spawnY: 52,
+        dangerLine: 112
+      };
+
+      const state = {
+        rafId: 0,
+        lastTime: 0,
+        score: 0,
+        highScore: Number(localStorage.getItem(STORAGE.highScore) || 0),
+        circles: [],
+        effects: [],
+        idCounter: 0,
+        previewX: 180,
+        previewLocked: false,
+        nextQueue: [],
+        peekDropsRemaining: 0,
+        running: true,
+        gameOver: false,
+        paused: false,
+        dropCooldown: 0,
+        dangerProgress: 0,
+        soundEnabled: localStorage.getItem(STORAGE.soundOn) !== '0',
+        messageTimer: 0,
+        rewardBusy: false,
+        pointerInside: false,
+        audio: null
+      };
+
+      highScoreEl.textContent = String(state.highScore);
+      updateSoundButton();
+
+      function resizeCanvas() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const width = Math.max(280, Math.floor(canvasWrap.clientWidth));
+        const height = Math.max(380, Math.floor(canvasWrap.clientHeight));
+        world.width = width;
+        world.height = height;
+        world.wall = Math.max(8, width * 0.022);
+        world.floorPad = Math.max(10, width * 0.026);
+        world.spawnY = 22 + FRUITS[0].radius + 12;
+        world.dangerLine = Math.max(88, Math.min(126, Math.round(height * 0.18)));
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        state.previewX = clamp(state.previewX, minPreviewX(), maxPreviewX());
+      }
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+      }
+
+      function weightedDropTier() {
+        const roll = Math.random();
+        if (roll < 0.35) return 0;
+        if (roll < 0.60) return 1;
+        if (roll < 0.80) return 2;
+        if (roll < 0.92) return 3;
+        return 4;
+      }
+
+      function fillQueue() {
+        while (state.nextQueue.length < 5) {
+          state.nextQueue.push(weightedDropTier());
+        }
+      }
+
+      function currentTier() {
+        fillQueue();
+        return state.nextQueue[0];
+      }
+
+      function updateHud() {
+        scoreEl.textContent = String(state.score);
+        highScoreEl.textContent = String(state.highScore);
+        const tier = currentTier();
+        const fruit = FRUITS[tier];
+        nextPreviewEl.textContent = fruit.emoji;
+        nextPreviewEl.style.background = 'radial-gradient(circle at 30% 28%, rgba(255,255,255,0.52), rgba(255,255,255,0.06) 38%, rgba(255,255,255,0.02) 70%), ' + fruit.color;
+
+        if (state.peekDropsRemaining > 0) {
+          const peek = state.nextQueue.slice(0, 3).map(function(index) {
+            return '<span class="peek-bubble" title="' + FRUITS[index].name + '">' + FRUITS[index].emoji + '</span>';
+          }).join('');
+          peekPreviewEl.innerHTML = peek;
+          rewardBtn.disabled = true;
+          rewardBtn.textContent = '✨ Peek active (' + state.peekDropsRemaining + ')';
+        } else {
+          peekPreviewEl.textContent = 'Watch an ad to reveal the next 3.';
+          rewardBtn.disabled = state.rewardBusy;
+          rewardBtn.textContent = state.rewardBusy ? 'Loading Ad…' : '📺 Watch Ad → Peek 3';
+        }
+      }
+
+      function showMessage(text, duration) {
+        messageEl.textContent = text;
+        messageEl.classList.add('show');
+        if (state.messageTimer) clearTimeout(state.messageTimer);
+        state.messageTimer = setTimeout(function() {
+          messageEl.classList.remove('show');
+        }, duration || 1600);
+      }
+
+      function minPreviewX() {
+        return world.wall + FRUITS[currentTier()].radius;
+      }
+
+      function maxPreviewX() {
+        return world.width - world.wall - FRUITS[currentTier()].radius;
+      }
+
+      function ensureAudio() {
+        if (state.audio || !window.AudioContext) return;
+        try {
+          state.audio = new AudioContext();
+        } catch (error) {
+          state.audio = null;
+        }
+      }
+
+      function unlockAudio() {
+        ensureAudio();
+        if (state.audio && state.audio.state === 'suspended') {
+          state.audio.resume().catch(function() {});
+        }
+      }
+
+      function playTone(freq, duration, type, gainValue, slideTo) {
+        if (!state.soundEnabled || !state.audio) return;
+        const now = state.audio.currentTime;
+        const osc = state.audio.createOscillator();
+        const gain = state.audio.createGain();
+        osc.type = type || 'sine';
+        osc.frequency.setValueAtTime(freq, now);
+        if (slideTo) {
+          osc.frequency.exponentialRampToValueAtTime(slideTo, now + duration);
+        }
+        gain.gain.setValueAtTime(gainValue || 0.04, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+        osc.connect(gain).connect(state.audio.destination);
+        osc.start(now);
+        osc.stop(now + duration);
+      }
+
+      function playDropSound() { playTone(180, 0.09, 'triangle', 0.045, 110); }
+      function playMergeSound(tier) { playTone(320 + tier * 28, 0.14, 'sine', 0.06, 640 + tier * 30); }
+      function playGameOverSound() { playTone(210, 0.28, 'sawtooth', 0.065, 120); }
+
+      function updateSoundButton() {
+        soundBtn.textContent = state.soundEnabled ? '🔊' : '🔇';
+        soundBtn.setAttribute('aria-label', state.soundEnabled ? 'Sound on' : 'Sound off');
+      }
+
+      function makeCircle(tier, x, y, vx, vy, scaleBoost) {
+        const fruit = FRUITS[tier];
+        return {
+          id: ++state.idCounter,
+          tier: tier,
+          x: x,
+          y: y,
+          vx: vx || 0,
+          vy: vy || 0,
+          r: fruit.radius,
+          mass: Math.max(1, fruit.radius * fruit.radius * 0.012),
+          bounceScale: scaleBoost || 0,
+          spin: (Math.random() * 2 - 1) * 0.04,
+          angle: Math.random() * Math.PI * 2,
+          age: 0,
+          dangerTimer: 0,
+          merged: false
+        };
+      }
+
+      function spawnDrop() {
+        if (state.gameOver || state.paused) return;
+        if (!state.previewLocked) {
+          state.previewLocked = true;
+          showMessage('Locked in — tap again or press Drop Fruit.');
+          return;
+        }
+        if (state.dropCooldown > 0) return;
+        if (state.circles.length >= 50) {
+          showMessage('Too crowded — wait for a merge!');
+          return;
+        }
+        const tier = currentTier();
+        const fruit = FRUITS[tier];
+        const x = clamp(state.previewX, world.wall + fruit.radius, world.width - world.wall - fruit.radius);
+        const y = world.spawnY;
+        state.circles.push(makeCircle(tier, x, y, 0, 30, 0.16));
+        state.nextQueue.shift();
+        fillQueue();
+        if (state.peekDropsRemaining > 0) state.peekDropsRemaining--;
+        state.previewLocked = false;
+        state.dropCooldown = 0.28;
+        playDropSound();
+        updateHud();
+      }
+
+      function grantPeekReward() {
+        state.rewardBusy = false;
+        state.peekDropsRemaining = Math.max(state.peekDropsRemaining, 3);
+        updateHud();
+        showMessage('Peek unlocked — next 3 drops revealed!', 1800);
+      }
+
+      function showRewardedAd() {
+        if (state.rewardBusy || state.peekDropsRemaining > 0 || state.gameOver) return;
+        unlockAudio();
+        state.rewardBusy = true;
+        updateHud();
+        if (window.sdk && typeof window.sdk.showRewardedVideo === 'function') {
+          window.sdk.showRewardedVideo(function(hasRewarded) {
+            state.rewardBusy = false;
+            if (hasRewarded) {
+              grantPeekReward();
+            } else {
+              updateHud();
+              showMessage('Ad skipped — no peek yet.');
+            }
+          });
+        } else {
+          grantPeekReward();
+        }
+      }
+
+      function showInterstitialAd(onComplete) {
+        if (window.sdk && typeof window.sdk.showInterstitial === 'function') {
+          window.sdk.showInterstitial(function() {
+            if (typeof onComplete === 'function') onComplete();
+          });
+        } else if (typeof onComplete === 'function') {
+          onComplete();
+        }
+      }
+
+      function aimAt(clientX) {
+        const rect = canvas.getBoundingClientRect();
+        const x = ((clientX - rect.left) / rect.width) * world.width;
+        state.previewX = clamp(x, minPreviewX(), maxPreviewX());
+        state.pointerInside = true;
+      }
+
+      function triggerGameOver() {
+        if (state.gameOver) return;
+        state.gameOver = true;
+        state.previewLocked = false;
+        playGameOverSound();
+        if (state.score > state.highScore) {
+          state.highScore = state.score;
+          localStorage.setItem(STORAGE.highScore, String(state.highScore));
+        }
+        updateHud();
+        finalScoreEl.textContent = String(state.score);
+        finalBestScoreEl.textContent = String(state.highScore);
+        showInterstitialAd(function() {
+          gameoverOverlay.classList.remove('hidden');
+        });
+      }
+
+      function addRipple(x, y, radius, color) {
+        state.effects.push({
+          kind: 'ripple',
+          x: x,
+          y: y,
+          radius: radius,
+          color: color,
+          age: 0,
+          life: 0.34
+        });
+      }
+
+      function addBurst(x, y, color) {
+        for (let i = 0; i < 7; i++) {
+          const speed = 65 + Math.random() * 90;
+          const angle = (Math.PI * 2 * i) / 7 + Math.random() * 0.35;
+          state.effects.push({
+            kind: 'spark',
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 20,
+            color: color,
+            age: 0,
+            life: 0.44
+          });
+        }
+      }
+
+      function mergeCircles(a, b) {
+        a.merged = true;
+        b.merged = true;
+        const nextTier = Math.min(FRUITS.length - 1, a.tier + 1);
+        const nx = (a.x + b.x) / 2;
+        const ny = (a.y + b.y) / 2;
+        const nvx = (a.vx + b.vx) * 0.18;
+        const nvy = (a.vy + b.vy) * 0.18 - 18;
+        state.score += FRUITS[nextTier].points;
+        state.circles.push(makeCircle(nextTier, nx, ny, nvx, nvy, 0.55));
+        addRipple(nx, ny, FRUITS[nextTier].radius * 0.7, FRUITS[nextTier].color);
+        addBurst(nx, ny, FRUITS[nextTier].stroke);
+        playMergeSound(nextTier);
+      }
+
+      function stepCircles(dt) {
+        const gravity = 1480;
+        const floor = world.height - world.floorPad;
+        const left = world.wall;
+        const right = world.width - world.wall;
+
+        for (let i = 0; i < state.circles.length; i++) {
+          const c = state.circles[i];
+          c.age += dt;
+          c.vy += gravity * dt;
+          c.x += c.vx * dt;
+          c.y += c.vy * dt;
+          c.angle += c.spin;
+          c.bounceScale *= 0.9;
+
+          if (c.x - c.r < left) {
+            c.x = left + c.r;
+            c.vx = Math.abs(c.vx) * 0.32;
+          } else if (c.x + c.r > right) {
+            c.x = right - c.r;
+            c.vx = -Math.abs(c.vx) * 0.32;
+          }
+
+          if (c.y + c.r > floor) {
+            c.y = floor - c.r;
+            if (Math.abs(c.vy) > 10) {
+              c.vy = -Math.abs(c.vy) * 0.18;
+            } else {
+              c.vy = 0;
+            }
+            c.vx *= 0.985;
+          }
+
+          if (c.y - c.r < 0) {
+            c.y = c.r;
+            c.vy = Math.abs(c.vy) * 0.12;
+          }
+        }
+
+        const mergeQueue = [];
+        for (let i = 0; i < state.circles.length; i++) {
+          const a = state.circles[i];
+          for (let j = i + 1; j < state.circles.length; j++) {
+            const b = state.circles[j];
+            if (a.merged || b.merged) continue;
+            const dx = b.x - a.x;
+            const dy = b.y - a.y;
+            let dist = Math.hypot(dx, dy);
+            const minDist = a.r + b.r;
+            if (dist === 0) dist = 0.0001;
+            if (dist < minDist) {
+              const nx = dx / dist;
+              const ny = dy / dist;
+              const overlap = minDist - dist;
+              const totalMass = a.mass + b.mass;
+              const aMove = overlap * (b.mass / totalMass);
+              const bMove = overlap * (a.mass / totalMass);
+              a.x -= nx * aMove;
+              a.y -= ny * aMove;
+              b.x += nx * bMove;
+              b.y += ny * bMove;
+
+              const rvx = b.vx - a.vx;
+              const rvy = b.vy - a.vy;
+              const velAlongNormal = rvx * nx + rvy * ny;
+              if (velAlongNormal < 0) {
+                const restitution = 0.2;
+                const impulse = (-(1 + restitution) * velAlongNormal) / ((1 / a.mass) + (1 / b.mass));
+                const ix = impulse * nx;
+                const iy = impulse * ny;
+                a.vx -= ix / a.mass;
+                a.vy -= iy / a.mass;
+                b.vx += ix / b.mass;
+                b.vy += iy / b.mass;
+
+                const tx = -ny;
+                const ty = nx;
+                const tangentSpeed = rvx * tx + rvy * ty;
+                const friction = tangentSpeed * 0.018;
+                a.vx += tx * friction / a.mass;
+                a.vy += ty * friction / a.mass;
+                b.vx -= tx * friction / b.mass;
+                b.vy -= ty * friction / b.mass;
+              }
+
+              if (a.tier === b.tier && a.tier < FRUITS.length - 1 && a.age > 0.08 && b.age > 0.08) {
+                mergeQueue.push({ a: a, b: b, overlap: overlap });
+              }
+            }
+          }
+        }
+
+        mergeQueue.sort(function(first, second) { return second.overlap - first.overlap; });
+        const consumed = new Set();
+        for (let i = 0; i < mergeQueue.length; i++) {
+          const pair = mergeQueue[i];
+          if (consumed.has(pair.a.id) || consumed.has(pair.b.id)) continue;
+          consumed.add(pair.a.id);
+          consumed.add(pair.b.id);
+          mergeCircles(pair.a, pair.b);
+        }
+
+        if (consumed.size > 0) {
+          state.circles = state.circles.filter(function(circle) {
+            return !consumed.has(circle.id);
+          });
+          updateHud();
+        }
+      }
+
+      function stepEffects(dt) {
+        for (let i = state.effects.length - 1; i >= 0; i--) {
+          const effect = state.effects[i];
+          effect.age += dt;
+          if (effect.kind === 'spark') {
+            effect.x += effect.vx * dt;
+            effect.y += effect.vy * dt;
+            effect.vy += 240 * dt;
+          }
+          if (effect.age >= effect.life) state.effects.splice(i, 1);
+        }
+      }
+
+      function updateDanger(dt) {
+        let hottest = 0;
+        for (let i = 0; i < state.circles.length; i++) {
+          const c = state.circles[i];
+          if (c.age > 0.35 && c.y - c.r < world.dangerLine) {
+            c.dangerTimer += dt;
+            if (c.dangerTimer > hottest) hottest = c.dangerTimer;
+          } else if (c.y - c.r > world.dangerLine + 10) {
+            c.dangerTimer = 0;
+          }
+        }
+        state.dangerProgress = clamp(hottest / 2, 0, 1);
+        canvasWrap.classList.toggle('urgent', state.dangerProgress > 0.3 && !state.gameOver);
+        if (hottest >= 2) triggerGameOver();
+      }
+
+      function step(dt) {
+        if (state.paused || state.gameOver) return;
+        state.dropCooldown = Math.max(0, state.dropCooldown - dt);
+        stepCircles(dt);
+        stepEffects(dt);
+        updateDanger(dt);
+      }
+
+      function drawPlayfield() {
+        ctx.clearRect(0, 0, world.width, world.height);
+
+        const bg = ctx.createLinearGradient(0, 0, 0, world.height);
+        bg.addColorStop(0, '#20254f');
+        bg.addColorStop(0.4, '#171a37');
+        bg.addColorStop(1, '#0f1122');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, world.width, world.height);
+
+        for (let i = 0; i < 28; i++) {
+          const alpha = 0.02 + (i % 3) * 0.008;
+          ctx.fillStyle = 'rgba(255,255,255,' + alpha + ')';
+          ctx.fillRect((i * 71) % world.width, (i * 119) % world.height, 2, 2);
+        }
+
+        ctx.fillStyle = 'rgba(255,255,255,0.03)';
+        ctx.fillRect(world.wall, 0, world.width - world.wall * 2, world.height);
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(world.wall, 0, world.width - world.wall * 2, world.height - world.floorPad);
+
+        ctx.save();
+        ctx.setLineDash([8, 8]);
+        ctx.strokeStyle = 'rgba(255,75,110,' + (0.45 + state.dangerProgress * 0.45) + ')';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(world.wall + 8, world.dangerLine);
+        ctx.lineTo(world.width - world.wall - 8, world.dangerLine);
+        ctx.stroke();
+        ctx.restore();
+
+        if (state.dangerProgress > 0.01 && !state.gameOver) {
+          const w = (world.width - 24) * state.dangerProgress;
+          ctx.fillStyle = 'rgba(255,75,110,0.18)';
+          ctx.fillRect(12, 10, world.width - 24, 9);
+          ctx.fillStyle = 'rgba(255,75,110,0.92)';
+          ctx.fillRect(12, 10, w, 9);
+          ctx.fillStyle = 'rgba(255,255,255,0.9)';
+          ctx.font = '700 12px Inter, sans-serif';
+          ctx.fillText('DANGER', 14, 34);
+        }
+      }
+
+      function drawPreview() {
+        if (state.gameOver) return;
+        const tier = currentTier();
+        const fruit = FRUITS[tier];
+        const x = clamp(state.previewX, world.wall + fruit.radius, world.width - world.wall - fruit.radius);
+        const y = world.spawnY;
+        const pulse = 1 + Math.sin(performance.now() * 0.01) * 0.04;
+
+        ctx.save();
+        ctx.globalAlpha = 0.2;
+        ctx.setLineDash([6, 8]);
+        ctx.strokeStyle = state.previewLocked ? 'rgba(255,255,255,0.65)' : 'rgba(86,240,255,0.5)';
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, world.height - world.floorPad - fruit.radius);
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.save();
+        ctx.translate(x, y);
+        const scale = state.previewLocked ? 1.05 + Math.sin(performance.now() * 0.018) * 0.03 : pulse;
+        ctx.scale(scale, scale);
+        drawFruitCircle(0, 0, fruit, fruit.radius, 0.55, 0);
+        ctx.restore();
+
+        if (state.previewLocked) {
+          ctx.beginPath();
+          ctx.arc(x, y, fruit.radius + 10 + Math.sin(performance.now() * 0.014) * 3, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+      }
+
+      function drawFruitCircle(x, y, fruit, radius, alpha, angle) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle || 0);
+        ctx.globalAlpha = alpha == null ? 1 : alpha;
+        const gradient = ctx.createRadialGradient(-radius * 0.28, -radius * 0.35, radius * 0.12, 0, 0, radius);
+        gradient.addColorStop(0, 'rgba(255,255,255,0.72)');
+        gradient.addColorStop(0.16, fruit.stroke);
+        gradient.addColorStop(0.34, fruit.color);
+        gradient.addColorStop(1, shadeColor(fruit.color, -22));
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(0, 0, radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.36)';
+        ctx.lineWidth = Math.max(2, radius * 0.06);
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(255,255,255,0.18)';
+        ctx.beginPath();
+        ctx.arc(-radius * 0.28, -radius * 0.38, radius * 0.28, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.font = '900 ' + Math.max(18, radius * 1.02) + 'px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#fff';
+        ctx.fillText(fruit.emoji, 0, radius * 0.04);
+        ctx.restore();
+      }
+
+      function drawCircles() {
+        for (let i = 0; i < state.circles.length; i++) {
+          const c = state.circles[i];
+          const fruit = FRUITS[c.tier];
+          const scale = 1 + c.bounceScale;
+          ctx.save();
+          ctx.translate(c.x, c.y);
+          ctx.scale(scale, scale);
+          ctx.shadowColor = fruit.color;
+          ctx.shadowBlur = 18;
+          drawFruitCircle(0, 0, fruit, c.r, 1, c.angle * 0.08);
+          ctx.restore();
+        }
+      }
+
+      function drawEffects() {
+        for (let i = 0; i < state.effects.length; i++) {
+          const effect = state.effects[i];
+          const t = effect.age / effect.life;
+          if (effect.kind === 'ripple') {
+            ctx.save();
+            ctx.globalAlpha = 1 - t;
+            ctx.strokeStyle = effect.color;
+            ctx.lineWidth = 5 * (1 - t) + 1;
+            ctx.beginPath();
+            ctx.arc(effect.x, effect.y, effect.radius + t * 26, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+          } else if (effect.kind === 'spark') {
+            ctx.save();
+            ctx.globalAlpha = 1 - t;
+            ctx.fillStyle = effect.color;
+            ctx.beginPath();
+            ctx.arc(effect.x, effect.y, 3 + (1 - t) * 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
+        }
+      }
+
+      function shadeColor(hex, amount) {
+        const num = parseInt(hex.slice(1), 16);
+        const r = clamp(((num >> 16) & 255) + amount, 0, 255);
+        const g = clamp(((num >> 8) & 255) + amount, 0, 255);
+        const b = clamp((num & 255) + amount, 0, 255);
+        return 'rgb(' + r + ',' + g + ',' + b + ')';
+      }
+
+      function render() {
+        drawPlayfield();
+        drawPreview();
+        drawCircles();
+        drawEffects();
+      }
+
+      function loop(timestamp) {
+        if (!state.lastTime) state.lastTime = timestamp;
+        const dt = Math.min(0.033, (timestamp - state.lastTime) / 1000);
+        state.lastTime = timestamp;
+        step(dt);
+        render();
+        state.rafId = requestAnimationFrame(loop);
+      }
+
+      function resetRound() {
+        state.score = 0;
+        state.circles = [];
+        state.effects = [];
+        state.nextQueue = [];
+        state.peekDropsRemaining = 0;
+        state.dropCooldown = 0;
+        state.previewLocked = false;
+        state.gameOver = false;
+        state.paused = false;
+        state.dangerProgress = 0;
+        state.previewX = world.width / 2;
+        fillQueue();
+        canvasWrap.classList.remove('urgent');
+        gameoverOverlay.classList.add('hidden');
+        updateHud();
+        showMessage('Tap to aim, then tap again to drop.', 2200);
+      }
+
+      function onPointerMove(event) {
+        aimAt(event.clientX);
+      }
+
+      function onPointerDown(event) {
+        if (state.gameOver || state.paused) return;
+        unlockAudio();
+        aimAt(event.clientX);
+        if (!state.previewLocked) {
+          state.previewLocked = true;
+          showMessage('Locked in — tap again or press Drop Fruit.');
+        } else {
+          spawnDrop();
+        }
+      }
+
+      canvas.addEventListener('pointermove', onPointerMove);
+      canvas.addEventListener('pointerdown', onPointerDown);
+
+      dropBtn.addEventListener('click', function() {
+        unlockAudio();
+        spawnDrop();
+      });
+
+      rewardBtn.addEventListener('click', showRewardedAd);
+      soundBtn.addEventListener('click', function() {
+        state.soundEnabled = !state.soundEnabled;
+        localStorage.setItem(STORAGE.soundOn, state.soundEnabled ? '1' : '0');
+        updateSoundButton();
+        if (state.soundEnabled) unlockAudio();
+      });
+
+      document.getElementById('play-again-btn').addEventListener('click', function() {
+        resetRound();
+      });
+
+      document.getElementById('tooltip-close').addEventListener('click', function() {
+        tooltipOverlay.classList.add('hidden');
+        localStorage.setItem(STORAGE.seenHelp, '1');
+      });
+
+      window.addEventListener('resize', resizeCanvas);
+      window.addEventListener('orientationchange', resizeCanvas);
+
+      document.addEventListener('visibilitychange', function() {
+        if (document.hidden && !state.gameOver) state.previewLocked = false;
+      });
+
+      window.SDK_OPTIONS = {
+        gameId: 'md_merge_drop_01',
+        onEvent: function(event) {
+          switch (event.name) {
+            case 'SDK_GAME_PAUSE':
+              state.paused = true;
+              break;
+            case 'SDK_GAME_START':
+              state.paused = false;
+              break;
+            case 'SDK_READY':
+              window.__adReady = true;
+              break;
+          }
+        }
+      };
+
+      window.initGmSdk = function(SDK) {
+        window.sdk = SDK;
+        window.__adReady = true;
+        if (SDK && typeof SDK.gameStart === 'function') SDK.gameStart();
+      };
+
+      setTimeout(function() {
+        if (!window.__adReady) {
+          window.sdk = null;
+          window.__adReady = true;
+        }
+      }, 5000);
+
+      resizeCanvas();
+      resetRound();
+      if (!localStorage.getItem(STORAGE.seenHelp)) {
+        tooltipOverlay.classList.remove('hidden');
+      }
+      state.rafId = requestAnimationFrame(loop);
+      window.__mergeDrop = state;
+    })();
+  </script>
+  <script id="gamemonetize-sdk" src="https://api.gamemonetize.com/sdk.js" async></script>
+</body>
+</html>

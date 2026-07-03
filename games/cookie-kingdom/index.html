@@ -137,9 +137,30 @@
     }
 
     #prestige-info {
-      font-size: 0.8rem;
-      color: var(--muted);
+      font-size: 0.85rem;
+      color: #ffd700;
       text-align: center;
+      margin-top: 8px;
+    }
+    .prestige-btn {
+      display: block;
+      width: 100%;
+      margin: 8px auto;
+      padding: 12px 16px;
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      color: #1a1a2e;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      animation: pulse-gold 2s ease-in-out infinite;
+    }
+    .prestige-btn:hover { transform: scale(1.03); }
+    .prestige-btn.hidden { display: none; }
+    @keyframes pulse-gold {
+      0%, 100% { box-shadow: 0 0 8px rgba(255,215,0,0.4); }
+      50% { box-shadow: 0 0 20px rgba(255,215,0,0.8); }
     }
 
     /* AD SIDE */
@@ -268,6 +289,9 @@
       </div>
 
       <div id="prestige-info" aria-live="polite"></div>
+      <button id="prestige-btn" class="prestige-btn hidden" aria-label="Prestige: reset progress for permanent bonus">
+        🌟 PRESTIGE — Reset for bonus
+      </button>
     </div>
 
     <div id="shop-panel">
@@ -283,20 +307,38 @@
 
   <footer>
     <a href="../../index.html">← Back to Games</a> &nbsp;|&nbsp;
-    Cookie Kingdom v1.0 &nbsp;|&nbsp;
+    Cookie Kingdom v1.1 &nbsp;|&nbsp;
     <span id="save-status">Auto-saved</span>
   </footer>
 
   <script>
     // ── State ──────────────────────────────────────────────────────────────
-    const SAVE_KEY = 'ck_save_v1';
+    const SAVE_KEY = 'ck_save_v2';
     let state = {
       cookies: 0,
       allTime: 0,
       cps: 0,
       clickPower: 1,
       upgrades: {},
+      prestige: 0,       // prestige level (number of resets)
+      prestigeStars: 0,  // total stars earned
+      lifetimeCookies: 0 // cookies across ALL prestiges
     };
+
+    // Migrate from v1 save
+    (function migrateV1() {
+      try {
+        const v1 = localStorage.getItem('ck_save_v1');
+        if (v1 && !localStorage.getItem(SAVE_KEY)) {
+          const parsed = JSON.parse(v1);
+          parsed.prestige = 0;
+          parsed.prestigeStars = 0;
+          parsed.lifetimeCookies = parsed.allTime || 0;
+          localStorage.setItem(SAVE_KEY, JSON.stringify(parsed));
+          localStorage.removeItem('ck_save_v1');
+        }
+      } catch(e) {}
+    })();
 
     const UPGRADES = [
       {
@@ -404,8 +446,33 @@
         cps += u.cpsBonus * owned;
         cp  += u.clickBonus * owned;
       });
-      state.cps = cps;
-      state.clickPower = cp;
+      // Prestige multiplier: +10% per star
+      const prestigeMult = 1 + (state.prestigeStars * 0.10);
+      state.cps = cps * prestigeMult;
+      state.clickPower = cp * prestigeMult;
+    }
+
+    // Calculate prestige stars earned from current run
+    function calcPrestigeStars() {
+      // Stars = floor(sqrt(allTime / 1,000,000))
+      return Math.floor(Math.sqrt(state.allTime / 1_000_000));
+    }
+
+    function doPrestige() {
+      const newStars = calcPrestigeStars();
+      if (newStars < 1) return;
+      state.prestigeStars += newStars;
+      state.prestige++;
+      state.lifetimeCookies += state.allTime;
+      // Reset progress
+      state.cookies = 0;
+      state.allTime = 0;
+      state.upgrades = {};
+      recalc();
+      renderScores();
+      renderShop();
+      renderPrestige();
+      save();
     }
 
     // ── Save / Load ────────────────────────────────────────────────────────
@@ -524,14 +591,36 @@
     // Auto-save every 10 seconds
     setInterval(save, 10_000);
 
-    // Prestige hint
-    function updatePrestige() {
+    // Prestige system
+    function renderPrestige() {
       const info = document.getElementById('prestige-info');
-      if (state.allTime >= 1_000_000) {
-        info.textContent = '🌟 Prestige available! (coming soon)';
+      const btn = document.getElementById('prestige-btn');
+      const pendingStars = calcPrestigeStars();
+      
+      if (state.prestigeStars > 0) {
+        info.innerHTML = `⭐ ${state.prestigeStars} stars (×${(1 + state.prestigeStars * 0.10).toFixed(1)} bonus) | Prestige #${state.prestige}`;
+      }
+      
+      if (pendingStars >= 1) {
+        btn.classList.remove('hidden');
+        btn.textContent = `🌟 PRESTIGE — Earn ${pendingStars} star${pendingStars > 1 ? 's' : ''} (+${pendingStars * 10}% bonus)`;
+      } else {
+        btn.classList.add('hidden');
+        if (state.allTime < 1_000_000) {
+          info.innerHTML += state.prestigeStars > 0 ? '' : `<br><small>Reach 1M cookies to unlock prestige</small>`;
+        }
       }
     }
-    setInterval(updatePrestige, 5000);
+    
+    document.getElementById('prestige-btn').addEventListener('click', function() {
+      const stars = calcPrestigeStars();
+      if (stars < 1) return;
+      if (confirm(`Prestige now?\n\nYou'll earn ${stars} star(s) (+${stars * 10}% permanent bonus)\nYour cookies and upgrades will reset.`)) {
+        doPrestige();
+      }
+    });
+    
+    setInterval(renderPrestige, 2000);
 
     // ── GameMonetize Ad SDK Integration ────────────────────────────────────
     // SDK_OPTIONS pattern (required for ads to serve)
