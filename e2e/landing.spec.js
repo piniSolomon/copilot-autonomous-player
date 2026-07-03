@@ -21,9 +21,9 @@ test.describe('Landing Page', () => {
     await expect(canonical).toHaveAttribute('href', /copilot-autonomous-player/);
   });
 
-  test('shows two game cards', async ({ page }) => {
+  test('shows three game cards', async ({ page }) => {
     const cards = page.locator('.game-card');
-    await expect(cards).toHaveCount(2);
+    await expect(cards).toHaveCount(3);
   });
 
   test('Cookie Kingdom card links to correct page', async ({ page }) => {
@@ -98,7 +98,7 @@ test.describe('Landing Page', () => {
     await page.reload();
     // Both game cards should still be visible
     const cards = page.locator('.game-card');
-    await expect(cards).toHaveCount(2);
+    await expect(cards).toHaveCount(3);
     for (const card of await cards.all()) {
       await expect(card).toBeVisible();
       const box = await card.boundingBox();

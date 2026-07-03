@@ -301,6 +301,17 @@
       { color: '#f44336', emoji: '🔺' },
     ];
 
+    // Power-up system
+    const POWERUP_TYPES = [
+      { id: 'shield', emoji: '🛡️', color: '#00e5ff', duration: 5000, desc: 'Invincible!' },
+      { id: 'slow', emoji: '🐌', color: '#4caf50', duration: 4000, desc: 'Slow motion' },
+      { id: 'shrink', emoji: '🔬', color: '#e040fb', duration: 4000, desc: 'Tiny ship!' },
+      { id: 'magnet', emoji: '🧲', color: '#ffd700', duration: 0, desc: '+50 points' },
+    ];
+    let powerups = [];
+    let activePower = null;
+    let powerTimer = null;
+
     // ── Draw helpers ───────────────────────────────────────────────────────
     function drawPlayer(x) {
       ctx.save();
@@ -401,6 +412,55 @@
       });
     }
 
+    function spawnPowerup() {
+      const lane = Math.floor(Math.random() * LANE_COUNT);
+      const type = POWERUP_TYPES[Math.floor(Math.random() * POWERUP_TYPES.length)];
+      powerups.push({
+        x: LANES[lane] + (OBS_W - 24) / 2,
+        y: -30,
+        lane,
+        speed: speed * 0.8,
+        type,
+      });
+    }
+
+    function drawPowerup(pu) {
+      ctx.save();
+      ctx.globalAlpha = 0.9 + Math.sin(frameCount * 0.1) * 0.1;
+      ctx.fillStyle = pu.type.color;
+      ctx.beginPath();
+      ctx.arc(pu.x + 12, pu.y + 12, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.font = '16px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(pu.type.emoji, pu.x + 12, pu.y + 18);
+      ctx.restore();
+    }
+
+    function collectPowerup(pu) {
+      const t = pu.type;
+      if (t.id === 'magnet') {
+        score += 50;
+        spawnParticles(pu.x, pu.y, '#ffd700');
+      } else {
+        activePower = t.id;
+        clearTimeout(powerTimer);
+        powerTimer = setTimeout(() => { activePower = null; }, t.duration);
+        spawnParticles(pu.x, pu.y, t.color);
+      }
+    }
+
+    function checkPowerupCollision() {
+      const px = player.x, py = PLAYER_Y;
+      for (let i = powerups.length - 1; i >= 0; i--) {
+        const pu = powerups[i];
+        if (rectsOverlap(px, py, PLAYER_W, PLAYER_H, pu.x, pu.y, 24, 24)) {
+          collectPowerup(pu);
+          powerups.splice(i, 1);
+        }
+      }
+    }
+
     function spawnParticles(x, y, color) {
       for (let i = 0; i < 16; i++) {
         const angle = Math.random() * Math.PI * 2;
@@ -444,6 +504,7 @@
     // ── Game loop ──────────────────────────────────────────────────────────
     function gameLoop() {
       if (!alive) return;
+      if (window.__gamePaused) { animId = requestAnimationFrame(gameLoop); return; }
       frameCount++;
 
       // Keyboard input (with repeat throttle)
@@ -461,12 +522,21 @@
         spawnInterval = Math.max(spawnInterval - 5, 30);
       }
 
-      // Spawn obstacles
-      if (frameCount % spawnInterval === 0) spawnObstacle();
+      // Spawn obstacles (slower if 'slow' power-up active)
+      var effectiveInterval = activePower === 'slow' ? spawnInterval * 2 : spawnInterval;
+      if (frameCount % effectiveInterval === 0) spawnObstacle();
+
+      // Spawn power-ups (every ~400 frames, ~15% chance)
+      if (frameCount % 400 === 0 && Math.random() < 0.6) spawnPowerup();
 
       // Move obstacles
-      obstacles.forEach(ob => { ob.y += ob.speed; });
+      var speedMult = activePower === 'slow' ? 0.5 : 1;
+      obstacles.forEach(ob => { ob.y += ob.speed * speedMult; });
       obstacles = obstacles.filter(ob => ob.y < CANVAS_H + 40);
+
+      // Move power-ups
+      powerups.forEach(pu => { pu.y += pu.speed * speedMult; });
+      powerups = powerups.filter(pu => pu.y < CANVAS_H + 40);
 
       // Move particles
       for (const p of particles) {
@@ -474,8 +544,11 @@
       }
       particles = particles.filter(p => p.life > 0);
 
-      // Collision
-      if (checkCollisions()) {
+      // Power-up collection
+      checkPowerupCollision();
+
+      // Collision (skip if shield active)
+      if (activePower !== 'shield' && checkCollisions()) {
         alive = false;
         spawnParticles(player.x, PLAYER_Y, '#ff4081');
         spawnParticles(player.x, PLAYER_Y, '#ffea00');
@@ -491,9 +564,33 @@
     function draw() {
       drawBackground();
       drawParticles();
+      powerups.forEach(drawPowerup);
       obstacles.forEach(drawObstacle);
-      if (alive) drawPlayer(player.x);
+      if (alive) {
+        // Draw player with power-up effects
+        if (activePower === 'shield') {
+          ctx.save();
+          ctx.globalAlpha = 0.3 + Math.sin(frameCount * 0.15) * 0.15;
+          ctx.strokeStyle = '#00e5ff';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(player.x + PLAYER_W / 2, PLAYER_Y + PLAYER_H / 2, PLAYER_W * 0.8, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        }
+        drawPlayer(player.x);
+      }
       drawHUD();
+      // Active power-up indicator
+      if (activePower) {
+        var pt = POWERUP_TYPES.find(p => p.id === activePower);
+        if (pt) {
+          ctx.fillStyle = pt.color;
+          ctx.font = 'bold 14px Segoe UI, Arial';
+          ctx.textAlign = 'center';
+          ctx.fillText(pt.emoji + ' ' + pt.desc, CANVAS_W / 2, CANVAS_H - 12);
+        }
+      }
     }
 
     // ── Score counter ──────────────────────────────────────────────────────
@@ -513,6 +610,9 @@
       spawnInterval = 80;
       obstacles = [];
       particles = [];
+      powerups = [];
+      activePower = null;
+      clearTimeout(powerTimer);
       player.lane = 2;
       player.x = LANES[2];
       leftHeld = false;
