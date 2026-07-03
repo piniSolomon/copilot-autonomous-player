@@ -267,6 +267,9 @@
 
   <main>
     <div class="section-title">🕹️ Featured Games</div>
+    <div style="text-align:center;margin-bottom:16px;">
+      <button id="random-game-btn" style="background:linear-gradient(135deg,#6c63ff,#e91e63);color:white;border:none;border-radius:30px;padding:12px 28px;font-size:1.05rem;cursor:pointer;font-weight:600;box-shadow:0 4px 15px rgba(108,99,255,0.4);transition:transform 0.15s,box-shadow 0.15s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">🎲 Play a Random Game</button>
+    </div>
 
     <div class="games-grid">
       <!-- Game 1: Cookie Kingdom -->
@@ -536,6 +539,23 @@
     setTimeout(function() {
       if (!window.__adReady) { window.__adReady = true; }
     }, 4000);
+
+    // Random game button
+    document.getElementById('random-game-btn').addEventListener('click', function() {
+      var games = [
+        'games/cookie-kingdom/index.html',
+        'games/dodge-rush/index.html',
+        'games/merge-drop/index.html',
+        'games/number-merge/index.html',
+        'games/word-guess/index.html',
+        'games/memory-match/index.html',
+        'games/reaction-test/index.html',
+        'games/color-merge/index.html',
+        'games/snake/index.html',
+        'games/typing-speed/index.html'
+      ];
+      window.location.href = games[Math.floor(Math.random() * games.length)];
+    });
   </script>
   <!-- GameMonetize SDK — loads asynchronously, fires initGmSdk() when ready -->
   <script src="https://api.gamemonetize.com/sdk.js" async></script>
