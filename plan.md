@@ -1,36 +1,39 @@
-# Plan
+# Plan — Continuous Game Empire
 
-## Current Goal
+## Mission
+Build, improve, and promote web games for ad revenue. Never stop.
 
-Create a game that generates revenue. Target: first $1 earned.
+## Active Games (LIVE)
+- 🍪 **Cookie Kingdom** — idle clicker | [itch.io](https://coinempire-game.itch.io/cookie-kingdom) | [GitHub Pages](https://pinisolomon.github.io/copilot-autonomous-player/games/cookie-kingdom/)
+- ⚡ **Dodge Rush** — obstacle dodge | [itch.io](https://coinempire-game.itch.io/dodge-rush) | [GitHub Pages](https://pinisolomon.github.io/copilot-autonomous-player/games/dodge-rush/)
 
-## Strategy
+## In Progress
+- [x] Fix GameMonetize SDK (updated to SDK_OPTIONS pattern — needs real gameId)
+- [ ] **Merge Drop** — Suika-style drop & merge (BUILDING NOW)
+- [ ] Register on GameMonetize → get real game IDs → ads start working
+- [ ] Promote games on Reddit (r/WebGames, r/incremental_games, r/IndieGaming)
 
-Build a free web game (HTML5/JS) that can be monetized through ads. Deploy to a free platform. Focus on a genre that's proven to generate ad revenue with casual/repeat players.
+## Backlog
+- [ ] Improve Cookie Kingdom: prestige system, achievements, offline progress
+- [ ] Improve Dodge Rush: power-ups, leaderboard, difficulty curve, particles
+- [ ] Submit games to CrazyGames & Poki
+- [ ] Add Ko-fi/donation link as backup monetization
+- [ ] Build more games: number merge, puzzle, tower defense
+- [ ] Set up analytics (simple pageview counter)
 
-## Tasks
+## Blocked
+- ⚠️ **Ads**: Need GameMonetize account credentials (asked Pini on Discord)
 
-- [ ] Research: best game genres for ad revenue (casual, hyper-casual, idle, puzzle)
-- [ ] Research: free monetization platforms (Google AdSense, ad networks for games)
-- [ ] Research: free hosting options (itch.io, GitHub Pages, Vercel, GameJolt)
-- [ ] Decide: game concept, genre, and tech stack
-- [ ] Build: game MVP (playable core loop)
-- [ ] Test: E2E tests for game mechanics
-- [ ] Deploy: publish to chosen platform
-- [ ] Monetize: integrate ads
-- [ ] Promote: get first players (Reddit, social, game communities)
-- [ ] Iterate: improve based on player feedback
-
-## Status
-
-Just bootstrapped. Starting research phase.
-
-## Open Questions
-
-- What ad network works best for web games with low traffic? (research needed)
-- itch.io vs custom domain for maximum ad flexibility? (research needed)
-- Discord bot token & channel — human will provide when ready.
+## Completed
+- ✅ Cookie Kingdom built & deployed (itch.io + GitHub Pages)
+- ✅ Dodge Rush built & deployed (itch.io + GitHub Pages)
+- ✅ 51 E2E tests passing
+- ✅ Landing page with SEO
+- ✅ GameMonetize SDK integration (pattern fixed, awaiting real IDs)
+- ✅ GitHub Actions CI/CD
 
 ## Learnings
-
-None yet — just getting started.
+- GameMonetize requires SDK_OPTIONS with gameId (not just initGmSdk callback)
+- itch.io doesn't allow custom ads — only GameMonetize's platform or GitHub Pages
+- Suika/merge games are viral — focus on this genre next
+- E2E tests should run with --workers=1 to avoid port conflicts
