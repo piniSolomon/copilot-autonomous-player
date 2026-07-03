@@ -209,9 +209,10 @@
       <!-- Start screen -->
       <div class="overlay" id="start-screen">
         <h2 style="color:var(--accent)">⚡ DODGE RUSH</h2>
-        <p>Dodge incoming obstacles. Survive as long as possible!</p>
+        <p>Dodge incoming obstacles. Collect power-ups. Survive!</p>
         <p style="color:var(--text)">← → Arrow keys &nbsp;|&nbsp; A/D &nbsp;|&nbsp; Tap buttons below</p>
         <button class="btn btn-primary" id="start-btn">▶ START GAME</button>
+        <button id="sound-toggle" style="margin-top:10px;background:transparent;border:1px solid rgba(255,255,255,0.2);color:white;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:0.9rem;">🔊 Sound ON</button>
       </div>
 
       <!-- Game Over screen -->
@@ -288,6 +289,33 @@
     // Mobile control state
     let leftHeld = false, rightHeld = false;
     let moveTimer = null;
+
+    // ── Audio (Web Audio API) ──────────────────────────────────────────────
+    let audioCtx = null;
+    let soundOn = localStorage.getItem('dr_sound') !== 'off';
+
+    function initAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function playTone(freq, duration, type, vol) {
+      if (!soundOn || !audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type || 'square';
+      osc.frequency.value = freq;
+      gain.gain.value = vol || 0.1;
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function sfxDodge() { playTone(600, 0.05, 'sine', 0.05); }
+    function sfxPowerup() { playTone(880, 0.1, 'sine', 0.12); playTone(1100, 0.15, 'sine', 0.08); }
+    function sfxCrash() { playTone(150, 0.3, 'sawtooth', 0.15); playTone(80, 0.4, 'square', 0.1); }
+    function sfxMove() { playTone(440, 0.03, 'sine', 0.03); }
 
     // ── Canvas ─────────────────────────────────────────────────────────────
     const canvas = document.getElementById('canvas');
@@ -439,6 +467,7 @@
 
     function collectPowerup(pu) {
       const t = pu.type;
+      sfxPowerup();
       if (t.id === 'magnet') {
         score += 50;
         spawnParticles(pu.x, pu.y, '#ffd700');
@@ -498,6 +527,7 @@
       if (newLane >= 0 && newLane < LANE_COUNT) {
         player.lane = newLane;
         player.x = LANES[player.lane];
+        sfxMove();
       }
     }
 
@@ -550,6 +580,7 @@
       // Collision (skip if shield active)
       if (activePower !== 'shield' && checkCollisions()) {
         alive = false;
+        sfxCrash();
         spawnParticles(player.x, PLAYER_Y, '#ff4081');
         spawnParticles(player.x, PLAYER_Y, '#ffea00');
         draw();
@@ -602,6 +633,7 @@
 
     // ── Game states ────────────────────────────────────────────────────────
     function startGame() {
+      initAudio();
       running = true;
       alive = true;
       score = 0;
@@ -653,6 +685,19 @@
 
     document.getElementById('start-btn').addEventListener('click', startGame);
     document.getElementById('restart-btn').addEventListener('click', startGame);
+
+    // Sound toggle
+    const soundToggle = document.getElementById('sound-toggle');
+    function updateSoundBtn() {
+      soundToggle.textContent = soundOn ? '🔊 Sound ON' : '🔇 Sound OFF';
+    }
+    updateSoundBtn();
+    soundToggle.addEventListener('click', () => {
+      soundOn = !soundOn;
+      localStorage.setItem('dr_sound', soundOn ? 'on' : 'off');
+      updateSoundBtn();
+    });
+
     document.getElementById('menu-btn').addEventListener('click', () => {
       cancelAnimationFrame(animId);
       clearInterval(scoreIntervalId);
