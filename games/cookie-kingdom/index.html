@@ -328,6 +328,7 @@
       <button id="prestige-btn" class="prestige-btn hidden" aria-label="Prestige: reset progress for permanent bonus">
         🌟 PRESTIGE — Reset for bonus
       </button>
+      <button id="share-btn" style="display:block;width:100%;margin:6px auto;padding:8px;background:#1e88e5;color:white;border:none;border-radius:6px;font-size:0.85rem;cursor:pointer;" aria-label="Share your stats">📋 Share My Stats</button>
     </div>
 
     <div id="shop-panel">
@@ -813,6 +814,24 @@
     }
 
     document.getElementById('rewarded-btn').addEventListener('click', showRewardedAd);
+
+    // Share button
+    document.getElementById('share-btn').addEventListener('click', function() {
+      const unlocked = unlockedAchievements.length;
+      const total = ACHIEVEMENTS.length;
+      const text = `🍪 Cookie Kingdom Stats 🍪\n` +
+        `All-time: ${fmt(state.allTime + state.lifetimeCookies)} cookies\n` +
+        `CPS: ${fmt(state.cps)}/sec\n` +
+        `Prestige: ${state.prestige}× (${state.prestigeStars} ⭐)\n` +
+        `Achievements: ${unlocked}/${total} 🏆\n` +
+        `Play free: https://pinisolomon.github.io/copilot-autonomous-player/games/cookie-kingdom/`;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+          this.textContent = '✅ Copied to clipboard!';
+          setTimeout(() => { this.textContent = '📋 Share My Stats'; }, 2000);
+        });
+      }
+    });
 
     // ── Init ───────────────────────────────────────────────────────────────
     load();
