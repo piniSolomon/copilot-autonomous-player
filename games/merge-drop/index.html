@@ -362,6 +362,7 @@
         <p>Best score: <strong id="final-best-score">0</strong></p>
         <p class="tiny">One more round. One bigger watermelon.</p>
         <div class="overlay-actions">
+          <button id="share-md-btn" type="button" style="background:#1e88e5;color:white;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:0.85rem;margin-bottom:6px;">📋 Share Score</button>
           <button id="play-again-btn" type="button">Play Again</button>
         </div>
       </div>
@@ -1107,6 +1108,19 @@
 
       document.getElementById('play-again-btn').addEventListener('click', function() {
         resetRound();
+      });
+
+      document.getElementById('share-md-btn').addEventListener('click', function() {
+        var sc = document.getElementById('final-score').textContent;
+        var best = document.getElementById('final-best-score').textContent;
+        var text = '🍉 Merge Drop 🍉\nScore: ' + sc + ' | Best: ' + best + '\nCan you grow the biggest fruit?\nPlay free: https://pinisolomon.github.io/copilot-autonomous-player/games/merge-drop/';
+        var btn = this;
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(text).then(function() {
+            btn.textContent = '✅ Copied!';
+            setTimeout(function() { btn.textContent = '📋 Share Score'; }, 2000);
+          });
+        }
       });
 
       document.getElementById('tooltip-close').addEventListener('click', function() {
