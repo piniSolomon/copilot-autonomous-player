@@ -1,0 +1,1765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>Color Merge — Match & Combine Puzzle</title>
+  <meta name="description" content="Build colorful clusters, trigger chain reactions, and evolve your board from Red to Gold in this polished merge puzzle." />
+  <meta name="keywords" content="color merge, merge puzzle, browser game, html5 game, casual game, mobile game" />
+  <meta name="theme-color" content="#0a0e27" />
+  <meta property="og:title" content="Color Merge — Match & Combine Puzzle" />
+  <meta property="og:description" content="Drag or tap to place glowing color balls, match 3+, and chain merges all the way to Gold." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://pinisolomon.github.io/copilot-autonomous-player/games/color-merge/" />
+  <meta property="og:image" content="https://pinisolomon.github.io/copilot-autonomous-player/assets/og-image.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Color Merge — Match & Combine Puzzle" />
+  <meta name="twitter:description" content="Match adjacent colored balls, chain satisfying merges, and chase a glowing Gold ball." />
+  <link rel="canonical" href="https://pinisolomon.github.io/copilot-autonomous-player/games/color-merge/" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='g' cx='28%25' cy='24%25'%3E%3Cstop offset='0%25' stop-color='%23ffffff'/%3E%3Cstop offset='22%25' stop-color='%23ffd77a'/%3E%3Cstop offset='60%25' stop-color='%23ff8c42'/%3E%3Cstop offset='100%25' stop-color='%23eb445a'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='%230a0e27'/%3E%3Ccircle cx='32' cy='32' r='20' fill='url(%23g)'/%3E%3C/svg%3E" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0a0e27;
+      --panel: rgba(17, 22, 50, 0.94);
+      --panel-2: rgba(22, 28, 62, 0.94);
+      --panel-soft: rgba(15, 19, 43, 0.9);
+      --text: #eef2ff;
+      --muted: #9aa6d9;
+      --accent: #5de4ff;
+      --accent-2: #8e6bff;
+      --good: #71f2bd;
+      --danger: #ff6a88;
+      --shadow: 0 20px 50px rgba(0, 0, 0, 0.42);
+      --radius: 24px;
+      --board-pad: 12px;
+      --gap: 10px;
+      --cell-size: 60px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 20% 0%, rgba(93, 228, 255, 0.16), transparent 34%),
+        radial-gradient(circle at 78% 8%, rgba(142, 107, 255, 0.18), transparent 32%),
+        linear-gradient(180deg, #172048 0%, #0f1532 42%, #090d21 100%);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      overscroll-behavior: none;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+    }
+
+    a { color: #8fdcff; }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 18px;
+      padding: 13px 16px;
+      font: inherit;
+      font-weight: 800;
+      color: var(--text);
+      background: linear-gradient(180deg, rgba(101, 116, 255, 0.98), rgba(73, 58, 196, 0.98));
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: transform 120ms ease, filter 120ms ease, opacity 120ms ease;
+      touch-action: manipulation;
+    }
+
+    button:hover { filter: brightness(1.07); }
+    button:active { transform: translateY(1px) scale(0.985); }
+    button:disabled { opacity: 0.42; cursor: default; filter: none; }
+
+    #game-shell {
+      width: min(100vw, 470px);
+      min-height: 100dvh;
+      padding: calc(12px + env(safe-area-inset-top)) 12px calc(16px + env(safe-area-inset-bottom));
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .panel {
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(22, 28, 62, 0.94), rgba(12, 16, 37, 0.94));
+      border: 1px solid rgba(134, 151, 255, 0.18);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    .back-link {
+      align-self: flex-start;
+      text-decoration: none;
+      font-size: 0.92rem;
+      color: #8fdcff;
+      opacity: 0.95;
+      padding-inline: 4px;
+    }
+
+    .hero {
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .eyebrow {
+      margin: 0 0 5px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 0.72rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.9rem, 8vw, 2.5rem);
+      line-height: 0.96;
+    }
+
+    .hero p:last-child {
+      margin: 10px 0 0;
+      color: #d8defd;
+      line-height: 1.45;
+      font-size: 0.95rem;
+      max-width: 27ch;
+    }
+
+    #new-game-btn {
+      min-width: 112px;
+      background: linear-gradient(180deg, rgba(255, 150, 96, 0.98), rgba(234, 81, 95, 0.98));
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .stat-card {
+      padding: 12px 14px;
+      min-height: 88px;
+    }
+
+    .stat-label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 0.7rem;
+    }
+
+    .stat-value {
+      font-size: clamp(1.45rem, 5vw, 1.95rem);
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .board-card {
+      padding: 12px;
+    }
+
+    .board-top {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      margin-bottom: 12px;
+      align-items: center;
+    }
+
+    .board-top-copy {
+      min-width: 0;
+    }
+
+    .board-top-copy strong {
+      display: block;
+      margin-bottom: 3px;
+      color: #fff5da;
+      font-size: 0.96rem;
+    }
+
+    .board-top-copy span {
+      display: block;
+      font-size: 0.84rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .queue-panel {
+      min-width: 152px;
+      padding: 10px 12px;
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(18, 22, 48, 0.92), rgba(10, 13, 32, 0.92));
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .queue-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    .queue-main {
+      display: grid;
+      grid-template-columns: 64px 1fr;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .queue-active {
+      position: relative;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      cursor: grab;
+      touch-action: none;
+      transition: transform 150ms ease, filter 150ms ease;
+    }
+
+    .queue-active:active { cursor: grabbing; }
+    .queue-active.ready { animation: queueBob 2.4s ease-in-out infinite; }
+    .queue-active.dragging { opacity: 0.35; transform: scale(0.94); }
+
+    .queue-note {
+      font-size: 0.78rem;
+      color: #d5dcff;
+      line-height: 1.35;
+    }
+
+    .queue-note span {
+      display: block;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .mini-queue {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .mini-ball {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+    }
+
+    .mini-ball .ball-face,
+    .queue-active .ball-face,
+    .drag-ghost .ball-face,
+    .cell .ball-face {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      position: relative;
+      background:
+        radial-gradient(circle at 28% 24%, rgba(255,255,255,0.98), rgba(255,255,255,0.48) 12%, rgba(255,255,255,0.12) 16%, transparent 18%),
+        radial-gradient(circle at 36% 34%, var(--ball-2), var(--ball-1) 72%);
+      box-shadow:
+        inset 0 -10px 18px rgba(0, 0, 0, 0.22),
+        inset 0 0 0 1px rgba(255,255,255,0.2),
+        0 0 22px color-mix(in srgb, var(--ball-glow) 52%, transparent);
+      overflow: hidden;
+    }
+
+    .mini-ball .ball-face::after,
+    .queue-active .ball-face::after,
+    .drag-ghost .ball-face::after,
+    .cell .ball-face::after {
+      content: '';
+      position: absolute;
+      inset: 10% 16% auto 12%;
+      height: 30%;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.35), rgba(255,255,255,0));
+      transform: rotate(-18deg);
+      filter: blur(1px);
+      opacity: 0.8;
+    }
+
+    .ball-symbol {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      color: rgba(255,255,255,0.94);
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+      z-index: 1;
+      font-size: 1rem;
+    }
+
+    .queue-active .ball-symbol,
+    .drag-ghost .ball-symbol { font-size: 1.15rem; }
+    .mini-ball .ball-symbol { font-size: 0.82rem; }
+
+    #board {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 28px;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(28, 34, 72, 0.98), rgba(11, 15, 33, 0.98)),
+        radial-gradient(circle at top, rgba(93, 228, 255, 0.08), transparent 46%);
+      border: 1px solid rgba(134, 151, 255, 0.2);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04), var(--shadow);
+      touch-action: none;
+    }
+
+    #board.shake { animation: boardShake 180ms ease; }
+    #board.merge-flash::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(255,255,255,0.18), transparent 60%);
+      animation: mergeFlash 220ms ease;
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    #cell-layer {
+      position: absolute;
+      inset: var(--board-pad);
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: var(--gap);
+    }
+
+    .cell {
+      position: relative;
+      border: 0;
+      padding: 0;
+      border-radius: 20px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03));
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.04),
+        inset 0 -10px 16px rgba(0, 0, 0, 0.18);
+      display: grid;
+      place-items: center;
+      transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+      overflow: hidden;
+    }
+
+    .cell::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.12), transparent 58%);
+      opacity: 0.72;
+      pointer-events: none;
+    }
+
+    .cell:hover {
+      background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.06),
+        0 0 0 1px rgba(93,228,255,0.16),
+        0 0 20px rgba(93,228,255,0.14);
+    }
+
+    .cell.valid-hover,
+    .cell.tap-target {
+      background: linear-gradient(180deg, rgba(117, 245, 192, 0.16), rgba(93, 228, 255, 0.06));
+      box-shadow:
+        inset 0 0 0 1px rgba(117,245,192,0.3),
+        0 0 0 1px rgba(117,245,192,0.3),
+        0 0 28px rgba(117,245,192,0.22);
+      transform: translateY(-1px);
+    }
+
+    .cell.invalid-hover {
+      box-shadow:
+        inset 0 0 0 1px rgba(255,106,136,0.26),
+        0 0 0 1px rgba(255,106,136,0.2),
+        0 0 22px rgba(255,106,136,0.16);
+    }
+
+    .cell.occupied { cursor: pointer; }
+    .cell.empty { cursor: pointer; }
+
+    .cell-ball {
+      width: 76%;
+      height: 76%;
+      position: relative;
+      transition: transform 180ms ease, opacity 180ms ease, filter 180ms ease;
+      will-change: transform, opacity;
+    }
+
+    .cell-ball.pop { animation: ballPop 240ms cubic-bezier(.23, 1.55, .45, 1); }
+    .cell-ball.upgrade { animation: ballPopStrong 300ms cubic-bezier(.2, 1.7, .42, 1); }
+    .cell-ball.merging { animation: mergeShrink 240ms ease forwards, ballPulse 240ms ease; }
+    .cell-ball.anchor { filter: brightness(1.14) saturate(1.18); }
+
+    .cell-tier-label {
+      position: absolute;
+      left: 50%;
+      bottom: 4px;
+      transform: translateX(-50%);
+      min-width: 24px;
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: rgba(5, 8, 19, 0.46);
+      color: rgba(255,255,255,0.82);
+      font-size: 0.56rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      z-index: 1;
+      backdrop-filter: blur(4px);
+    }
+
+    #particle-layer,
+    #drag-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    .particle {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95), var(--particle-color));
+      box-shadow: 0 0 16px color-mix(in srgb, var(--particle-color) 75%, transparent);
+      animation: particleFly 700ms ease-out forwards;
+      transform: translate(-50%, -50%);
+    }
+
+    .drag-ghost {
+      position: fixed;
+      width: 72px;
+      height: 72px;
+      transform: translate(-50%, -50%);
+      z-index: 40;
+      pointer-events: none;
+      opacity: 0;
+      filter: drop-shadow(0 16px 22px rgba(0, 0, 0, 0.35));
+    }
+
+    .drag-ghost.show {
+      opacity: 1;
+      animation: ghostPulse 700ms ease-in-out infinite;
+    }
+
+    .status-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .status-card {
+      padding: 12px 14px;
+      font-size: 0.92rem;
+      color: #dde4ff;
+      line-height: 1.45;
+      min-height: 70px;
+    }
+
+    .status-card strong {
+      display: block;
+      margin-bottom: 3px;
+      color: #fff7de;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 58px;
+      gap: 10px;
+    }
+
+    #undo-btn {
+      background: linear-gradient(180deg, rgba(38, 203, 183, 0.98), rgba(26, 134, 125, 0.98));
+    }
+
+    #share-btn {
+      background: linear-gradient(180deg, rgba(103, 125, 255, 0.98), rgba(69, 83, 208, 0.98));
+    }
+
+    #sound-btn {
+      padding-inline: 0;
+      display: grid;
+      place-items: center;
+      font-size: 1.15rem;
+    }
+
+    .hint-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(13, 17, 37, 0.92), rgba(10, 12, 27, 0.92));
+      border: 1px solid rgba(255,255,255,0.07);
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .hint-strip span:last-child {
+      color: #d8defd;
+      font-weight: 700;
+    }
+
+    #toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(20px + env(safe-area-inset-bottom));
+      transform: translateX(-50%) translateY(12px);
+      padding: 11px 16px;
+      border-radius: 999px;
+      background: rgba(8, 11, 27, 0.88);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #f2f5ff;
+      font-size: 0.88rem;
+      box-shadow: 0 18px 34px rgba(0,0,0,0.35);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms ease, transform 180ms ease;
+      z-index: 60;
+      white-space: nowrap;
+      max-width: calc(100vw - 32px);
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(6, 8, 21, 0.76);
+      transition: opacity 180ms ease, visibility 180ms ease;
+      z-index: 20;
+    }
+
+    .overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 320px;
+      padding: 22px 18px 18px;
+      border-radius: 24px;
+      background: linear-gradient(180deg, rgba(32, 37, 77, 0.98), rgba(12, 16, 34, 0.97));
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 24px 52px rgba(0,0,0,0.45);
+      text-align: center;
+    }
+
+    .modal .eyebrow { margin-bottom: 8px; }
+    .modal h2 { margin: 0; font-size: 2rem; }
+    .modal p {
+      margin: 10px 0 0;
+      color: #dbe1ff;
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+
+    .modal-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .modal-actions button:last-child {
+      background: linear-gradient(180deg, rgba(38, 203, 183, 0.98), rgba(26, 134, 125, 0.98));
+    }
+
+    @keyframes queueBob {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-4px) scale(1.02); }
+    }
+
+    @keyframes ballPop {
+      0% { transform: scale(0.18); opacity: 0; }
+      65% { transform: scale(1.12); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes ballPopStrong {
+      0% { transform: scale(0.22); opacity: 0; }
+      58% { transform: scale(1.22); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes mergeShrink {
+      0% { transform: scale(1); opacity: 1; }
+      72% { transform: scale(0.4); opacity: 0.7; }
+      100% { transform: scale(0.06); opacity: 0; }
+    }
+
+    @keyframes ballPulse {
+      0%, 100% { filter: brightness(1); }
+      45% { filter: brightness(1.45) saturate(1.2); }
+    }
+
+    @keyframes particleFly {
+      0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.2);
+      }
+    }
+
+    @keyframes boardShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      50% { transform: translateX(3px); }
+      75% { transform: translateX(-2px); }
+    }
+
+    @keyframes ghostPulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-50%, -50%) scale(1.04); }
+    }
+
+    @keyframes mergeFlash {
+      from { opacity: 0.7; }
+      to { opacity: 0; }
+    }
+
+    @media (max-width: 420px) {
+      #game-shell { padding-inline: 10px; }
+      .hero { grid-template-columns: 1fr; }
+      #new-game-btn { width: 100%; }
+      .stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .board-top { grid-template-columns: 1fr; }
+      .queue-panel { min-width: 0; }
+      .controls { grid-template-columns: 1fr 1fr; }
+      #sound-btn { min-height: 54px; }
+      .modal-actions { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div id="game-shell">
+    <a class="back-link" href="../../index.html">← Back to Games</a>
+
+    <section class="hero panel">
+      <div>
+        <p class="eyebrow">Match &amp; Combine Puzzle</p>
+        <h1>Color Merge</h1>
+        <p>Place the next glowing ball, connect 3 or more adjacent matches, and chain your way from Red to radiant Gold.</p>
+      </div>
+      <button id="new-game-btn" type="button">New Game</button>
+    </section>
+
+    <section class="stats-grid">
+      <div class="stat-card panel">
+        <span class="stat-label">Score</span>
+        <div class="stat-value" id="score-value">0</div>
+      </div>
+      <div class="stat-card panel">
+        <span class="stat-label">Best</span>
+        <div class="stat-value" id="best-value">0</div>
+      </div>
+      <div class="stat-card panel">
+        <span class="stat-label">Games</span>
+        <div class="stat-value" id="games-value">0</div>
+      </div>
+    </section>
+
+    <section class="board-card panel">
+      <div class="board-top">
+        <div class="board-top-copy">
+          <strong>Merge 3+ matching neighbors</strong>
+          <span>Tap an empty cell or drag the big preview ball onto the grid. Clusters merge automatically and can trigger chain reactions.</span>
+        </div>
+        <div class="queue-panel">
+          <div class="queue-header">
+            <span>Next 3</span>
+            <span id="queue-tier-name">Red</span>
+          </div>
+          <div class="queue-main">
+            <div id="queue-active" class="queue-active ready" role="button" aria-label="Drag next ball onto the board" tabindex="0"></div>
+            <div class="queue-note">
+              <strong id="queue-primary-name">Red</strong>
+              <span>Drag this ball or tap any open cell to place it.</span>
+            </div>
+          </div>
+          <div id="mini-queue" class="mini-queue" aria-label="Upcoming balls"></div>
+        </div>
+      </div>
+
+      <div id="board" aria-label="5 by 5 color merge board">
+        <div id="cell-layer"></div>
+        <div id="particle-layer"></div>
+        <div id="drag-layer">
+          <div id="drag-ghost" class="drag-ghost"></div>
+        </div>
+        <div id="game-over-overlay" class="overlay hidden" aria-hidden="true">
+          <div class="modal">
+            <p class="eyebrow">Board Full</p>
+            <h2>Game Over</h2>
+            <p id="final-message">No more spaces left. Start a fresh run and chase an even brighter Gold chain.</p>
+            <div class="modal-actions">
+              <button id="play-again-btn" type="button">New Game</button>
+              <button id="share-modal-btn" type="button">Share</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="status-row">
+      <div class="status-card panel" id="status-card">
+        <strong id="status-title">Ready to Merge</strong>
+        <span id="status-text">Red starts simple — the real magic happens when upgraded colors crash into each other and chain.</span>
+      </div>
+      <div class="controls">
+        <button id="undo-btn" type="button">Undo</button>
+        <button id="share-btn" type="button">Share</button>
+        <button id="hint-btn" type="button">Hint</button>
+        <button id="sound-btn" type="button" aria-label="Toggle sound">🔊</button>
+      </div>
+      <div class="hint-strip panel">
+        <span>Undo is limited to one move per game.</span>
+        <span id="undo-state">Undo available</span>
+      </div>
+    </section>
+  </div>
+
+  <div id="toast" aria-live="polite"></div>
+
+  <script>
+    (function() {
+      'use strict';
+
+      var SIZE = 5;
+      var STORAGE = {
+        highScore: 'cm_high_score',
+        games: 'cm_games',
+        sound: 'cm_sound',
+        undoUsed: 'cm_undo_used',
+        state: 'cm_state'
+      };
+
+      var TIERS = [
+        { name: 'Red', short: 'R', symbol: '•', c1: '#ff6378', c2: '#ff334d', glow: '#ff6a80' },
+        { name: 'Orange', short: 'O', symbol: '•', c1: '#ffbf63', c2: '#ff8b2f', glow: '#ffae52' },
+        { name: 'Yellow', short: 'Y', symbol: '•', c1: '#ffe87e', c2: '#ffc93d', glow: '#ffd95b' },
+        { name: 'Green', short: 'G', symbol: '•', c1: '#75f7b5', c2: '#26c786', glow: '#64ebb2' },
+        { name: 'Blue', short: 'B', symbol: '•', c1: '#70c3ff', c2: '#2f7cff', glow: '#6ab9ff' },
+        { name: 'Purple', short: 'P', symbol: '•', c1: '#d190ff', c2: '#914cff', glow: '#c281ff' },
+        { name: 'Gold', short: 'Gd', symbol: '★', c1: '#ffe38b', c2: '#ffb300', glow: '#ffd76a' }
+      ];
+
+      var RANDOM_POOL = [0,0,0,0,0,0,1,1,1,1,2,2,2,3,3,4];
+      var DIRECTIONS = [[1,0],[-1,0],[0,1],[0,-1]];
+      var SAVE_VERSION = 1;
+
+      var boardEl = document.getElementById('board');
+      var cellLayerEl = document.getElementById('cell-layer');
+      var particleLayerEl = document.getElementById('particle-layer');
+      var dragGhostEl = document.getElementById('drag-ghost');
+      var queueActiveEl = document.getElementById('queue-active');
+      var queuePrimaryNameEl = document.getElementById('queue-primary-name');
+      var queueTierNameEl = document.getElementById('queue-tier-name');
+      var miniQueueEl = document.getElementById('mini-queue');
+      var scoreValueEl = document.getElementById('score-value');
+      var bestValueEl = document.getElementById('best-value');
+      var gamesValueEl = document.getElementById('games-value');
+      var statusTitleEl = document.getElementById('status-title');
+      var statusTextEl = document.getElementById('status-text');
+      var undoStateEl = document.getElementById('undo-state');
+      var soundBtnEl = document.getElementById('sound-btn');
+      var toastEl = document.getElementById('toast');
+      var overlayEl = document.getElementById('game-over-overlay');
+      var finalMessageEl = document.getElementById('final-message');
+      var hintBtnEl = document.getElementById('hint-btn');
+
+      var cells = [];
+      var toastTimer = 0;
+      var counterRaf = 0;
+      var animationToken = 0;
+      var audioContext = null;
+      var dragState = null;
+
+      var displayState = {
+        score: 0,
+        best: 0,
+        games: 0
+      };
+
+      var state = {
+        grid: [],
+        queue: [],
+        score: 0,
+        highScore: 0,
+        gamesPlayed: 0,
+        soundEnabled: true,
+        undoUsed: false,
+        lastSnapshot: null,
+        gameOver: false,
+        busy: false,
+        hoverIndex: null,
+        highlightedIndex: null,
+        freshCells: [],
+        upgradedCells: [],
+        statusTitle: 'Ready to Merge',
+        statusText: 'Red starts simple — the real magic happens when upgraded colors crash into each other and chain.'
+      };
+
+      function safeGet(key, fallback) {
+        try {
+          var raw = localStorage.getItem(key);
+          return raw === null ? fallback : raw;
+        } catch (error) {
+          return fallback;
+        }
+      }
+
+      function safeSet(key, value) {
+        try {
+          localStorage.setItem(key, value);
+        } catch (error) {
+          return false;
+        }
+        return true;
+      }
+
+      function safeJSON(key) {
+        try {
+          var raw = localStorage.getItem(key);
+          return raw ? JSON.parse(raw) : null;
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function loadPersistentMeta() {
+        state.highScore = parseInt(safeGet(STORAGE.highScore, '0'), 10) || 0;
+        state.gamesPlayed = parseInt(safeGet(STORAGE.games, '0'), 10) || 0;
+        state.soundEnabled = safeGet(STORAGE.sound, '1') !== '0';
+        state.undoUsed = safeGet(STORAGE.undoUsed, '0') === '1';
+        displayState.score = state.score;
+        displayState.best = state.highScore;
+        displayState.games = state.gamesPlayed;
+      }
+
+      function persistMeta() {
+        safeSet(STORAGE.highScore, String(state.highScore));
+        safeSet(STORAGE.games, String(state.gamesPlayed));
+        safeSet(STORAGE.sound, state.soundEnabled ? '1' : '0');
+        safeSet(STORAGE.undoUsed, state.undoUsed ? '1' : '0');
+      }
+
+      function persistState() {
+        persistMeta();
+        var snapshot = {
+          version: SAVE_VERSION,
+          grid: state.grid.slice(),
+          queue: state.queue.slice(),
+          score: state.score,
+          highScore: state.highScore,
+          gamesPlayed: state.gamesPlayed,
+          soundEnabled: state.soundEnabled,
+          undoUsed: state.undoUsed,
+          lastSnapshot: state.lastSnapshot,
+          gameOver: state.gameOver,
+          statusTitle: state.statusTitle,
+          statusText: state.statusText
+        };
+        safeSet(STORAGE.state, JSON.stringify(snapshot));
+      }
+
+      function clearPersistedState() {
+        try {
+          localStorage.removeItem(STORAGE.state);
+        } catch (error) {
+          return;
+        }
+      }
+
+      function createCells() {
+        cellLayerEl.innerHTML = '';
+        cells = [];
+        for (var i = 0; i < SIZE * SIZE; i += 1) {
+          var button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'cell empty';
+          button.dataset.index = String(i);
+          button.setAttribute('aria-label', 'Empty cell ' + (i + 1));
+          cells.push(button);
+          cellLayerEl.appendChild(button);
+        }
+      }
+
+      function drawTier() {
+        return RANDOM_POOL[Math.floor(Math.random() * RANDOM_POOL.length)];
+      }
+
+      function fillQueue() {
+        while (state.queue.length < 3) state.queue.push(drawTier());
+      }
+
+      function cloneSnapshot() {
+        return {
+          grid: state.grid.slice(),
+          queue: state.queue.slice(),
+          score: state.score,
+          undoUsed: state.undoUsed,
+          gameOver: false,
+          highScore: state.highScore,
+          statusTitle: state.statusTitle,
+          statusText: state.statusText
+        };
+      }
+
+      function applySnapshot(snapshot) {
+        if (!snapshot) return;
+        state.grid = snapshot.grid.slice();
+        state.queue = snapshot.queue.slice();
+        state.score = snapshot.score || 0;
+        state.undoUsed = !!snapshot.undoUsed;
+        state.gameOver = !!snapshot.gameOver;
+        state.highScore = snapshot.highScore || state.highScore;
+        state.statusTitle = snapshot.statusTitle || 'Back on Track';
+        state.statusText = snapshot.statusText || 'Your previous move has been rewound.';
+        state.hoverIndex = null;
+        state.highlightedIndex = null;
+        state.freshCells = [];
+        state.upgradedCells = [];
+      }
+
+      function restoreSavedGame() {
+        var saved = safeJSON(STORAGE.state);
+        if (!saved || saved.version !== SAVE_VERSION) return false;
+        if (!Array.isArray(saved.grid) || saved.grid.length !== SIZE * SIZE || !Array.isArray(saved.queue) || saved.queue.length < 1) return false;
+        state.grid = saved.grid.map(function(value) {
+          return typeof value === 'number' && value >= 0 && value < TIERS.length ? value : null;
+        });
+        state.queue = saved.queue.map(function(value) {
+          return typeof value === 'number' && value >= 0 && value < TIERS.length ? value : 0;
+        }).slice(0, 3);
+        fillQueue();
+        state.score = saved.score || 0;
+        state.highScore = saved.highScore || state.highScore;
+        state.gamesPlayed = saved.gamesPlayed || state.gamesPlayed;
+        state.soundEnabled = saved.soundEnabled !== false;
+        state.undoUsed = !!saved.undoUsed;
+        state.lastSnapshot = saved.lastSnapshot || null;
+        state.gameOver = !!saved.gameOver;
+        state.statusTitle = saved.statusTitle || 'Resume Run';
+        state.statusText = saved.statusText || 'Your glowing board is waiting right where you left it.';
+        return true;
+      }
+
+      function startNewGame(options) {
+        options = options || {};
+        state.grid = new Array(SIZE * SIZE).fill(null);
+        state.queue = [];
+        fillQueue();
+        state.score = 0;
+        state.gameOver = false;
+        state.busy = false;
+        state.undoUsed = false;
+        state.lastSnapshot = null;
+        state.hoverIndex = null;
+        state.highlightedIndex = null;
+        state.freshCells = [];
+        state.upgradedCells = [];
+        state.statusTitle = 'Fresh Board';
+        state.statusText = 'Open spaces everywhere. Start building compact clusters to set up long chain reactions.';
+        animationToken += 1;
+        overlayEl.classList.add('hidden');
+        overlayEl.setAttribute('aria-hidden', 'true');
+        if (options.incrementGames !== false) {
+          state.gamesPlayed += 1;
+          showToast('New game started');
+        }
+        persistState();
+        syncCounters();
+        render();
+      }
+
+      function syncCounters() {
+        if (state.score > state.highScore) {
+          state.highScore = state.score;
+        }
+        scheduleCounterAnimation();
+        persistMeta();
+      }
+
+      function scheduleCounterAnimation() {
+        if (counterRaf) return;
+        counterRaf = requestAnimationFrame(tickCounters);
+      }
+
+      function tickCounters() {
+        counterRaf = 0;
+        var dirty = false;
+        dirty = animateDisplayNumber('score', state.score, scoreValueEl) || dirty;
+        dirty = animateDisplayNumber('best', state.highScore, bestValueEl) || dirty;
+        dirty = animateDisplayNumber('games', state.gamesPlayed, gamesValueEl) || dirty;
+        if (dirty) counterRaf = requestAnimationFrame(tickCounters);
+      }
+
+      function animateDisplayNumber(key, target, element) {
+        var current = displayState[key];
+        var next = current + (target - current) * 0.22;
+        if (Math.abs(target - current) < 0.5) {
+          displayState[key] = target;
+          element.textContent = String(target);
+          return false;
+        }
+        displayState[key] = next;
+        element.textContent = String(Math.round(next));
+        return true;
+      }
+
+      function setStatus(title, text) {
+        state.statusTitle = title;
+        state.statusText = text;
+        statusTitleEl.textContent = title;
+        statusTextEl.textContent = text;
+        persistState();
+      }
+
+      function renderBallMarkup(tierIndex, sizeClass) {
+        var tier = TIERS[tierIndex];
+        return '<div class="' + sizeClass + '" style="--ball-1:' + tier.c1 + ';--ball-2:' + tier.c2 + ';--ball-glow:' + tier.glow + ';">' +
+          '<div class="ball-face"></div>' +
+          '<div class="ball-symbol">' + tier.symbol + '</div>' +
+          '</div>';
+      }
+
+      function renderQueue() {
+        var currentTier = TIERS[state.queue[0]];
+        queueActiveEl.innerHTML = renderBallMarkup(state.queue[0], 'queue-active-inner');
+        queueActiveEl.style.setProperty('--ball-1', currentTier.c1);
+        queueActiveEl.style.setProperty('--ball-2', currentTier.c2);
+        queueActiveEl.style.setProperty('--ball-glow', currentTier.glow);
+        queueActiveEl.setAttribute('aria-label', 'Drag next ' + currentTier.name + ' ball onto the board');
+        queuePrimaryNameEl.textContent = currentTier.name;
+        queueTierNameEl.textContent = currentTier.name;
+        queueActiveEl.classList.toggle('dragging', !!dragState);
+
+        miniQueueEl.innerHTML = '';
+        state.queue.forEach(function(tierIndex, idx) {
+          var wrap = document.createElement('div');
+          wrap.className = 'mini-ball';
+          wrap.setAttribute('aria-label', (idx === 0 ? 'Current ball ' : 'Upcoming ball ') + TIERS[tierIndex].name);
+          wrap.innerHTML = renderBallMarkup(tierIndex, 'mini-ball-inner');
+          if (idx === 0) {
+            wrap.style.boxShadow = '0 0 0 1px rgba(255,255,255,0.12)';
+          }
+          miniQueueEl.appendChild(wrap);
+        });
+      }
+
+      function renderBoard() {
+        for (var i = 0; i < cells.length; i += 1) {
+          var cell = cells[i];
+          var tierIndex = state.grid[i];
+          var isEmpty = tierIndex === null || tierIndex === undefined;
+          var isHovered = state.hoverIndex === i;
+          var invalidHover = isHovered && !isEmpty;
+          var validHover = isHovered && isEmpty;
+          cell.className = 'cell ' + (isEmpty ? 'empty' : 'occupied');
+          if (validHover) cell.classList.add('valid-hover');
+          if (invalidHover) cell.classList.add('invalid-hover');
+          if (state.highlightedIndex === i && isEmpty) cell.classList.add('tap-target');
+          if (isEmpty) {
+            cell.innerHTML = '';
+            cell.setAttribute('aria-label', 'Empty cell ' + (i + 1));
+            continue;
+          }
+          var tier = TIERS[tierIndex];
+          var classes = ['cell-ball'];
+          if (state.freshCells.indexOf(i) !== -1) classes.push('pop');
+          if (state.upgradedCells.indexOf(i) !== -1) classes.push('upgrade');
+          cell.innerHTML = '<div class="' + classes.join(' ') + '" style="--ball-1:' + tier.c1 + ';--ball-2:' + tier.c2 + ';--ball-glow:' + tier.glow + ';">' +
+            '<div class="ball-face"></div>' +
+            '<div class="ball-symbol">' + tier.symbol + '</div>' +
+            '<div class="cell-tier-label">' + tier.short + '</div>' +
+            '</div>';
+          cell.setAttribute('aria-label', tier.name + ' ball in cell ' + (i + 1));
+        }
+      }
+
+      function renderMeta() {
+        soundBtnEl.textContent = state.soundEnabled ? '🔊' : '🔈';
+        soundBtnEl.setAttribute('aria-pressed', state.soundEnabled ? 'true' : 'false');
+        undoStateEl.textContent = state.undoUsed ? 'Undo spent' : (state.lastSnapshot ? 'Undo available' : 'Place a ball to unlock undo');
+        document.getElementById('undo-btn').disabled = !state.lastSnapshot || state.undoUsed || state.busy;
+        hintBtnEl.disabled = state.busy;
+        overlayEl.classList.toggle('hidden', !state.gameOver);
+        overlayEl.setAttribute('aria-hidden', state.gameOver ? 'false' : 'true');
+      }
+
+      function render() {
+        renderQueue();
+        renderBoard();
+        renderMeta();
+        statusTitleEl.textContent = state.statusTitle;
+        statusTextEl.textContent = state.statusText;
+        syncCounters();
+      }
+
+      function clearTransientAnimations() {
+        if (!state.freshCells.length && !state.upgradedCells.length) return;
+        state.freshCells = [];
+        state.upgradedCells = [];
+        renderBoard();
+      }
+
+      function scheduleTransientClear(delay) {
+        var token = animationToken;
+        window.setTimeout(function() {
+          if (token !== animationToken) return;
+          clearTransientAnimations();
+        }, delay);
+      }
+
+      function coordsToIndex(row, col) {
+        return row * SIZE + col;
+      }
+
+      function indexToRowCol(index) {
+        return { row: Math.floor(index / SIZE), col: index % SIZE };
+      }
+
+      function getNeighbors(index) {
+        var pos = indexToRowCol(index);
+        var results = [];
+        for (var i = 0; i < DIRECTIONS.length; i += 1) {
+          var nextRow = pos.row + DIRECTIONS[i][0];
+          var nextCol = pos.col + DIRECTIONS[i][1];
+          if (nextRow < 0 || nextRow >= SIZE || nextCol < 0 || nextCol >= SIZE) continue;
+          results.push(coordsToIndex(nextRow, nextCol));
+        }
+        return results;
+      }
+
+      function findMergeGroups() {
+        var visited = new Array(SIZE * SIZE).fill(false);
+        var groups = [];
+
+        for (var i = 0; i < state.grid.length; i += 1) {
+          if (visited[i] || state.grid[i] === null) continue;
+          var tier = state.grid[i];
+          var queue = [i];
+          var component = [];
+          visited[i] = true;
+
+          while (queue.length) {
+            var current = queue.shift();
+            component.push(current);
+            var neighbors = getNeighbors(current);
+            for (var j = 0; j < neighbors.length; j += 1) {
+              var next = neighbors[j];
+              if (visited[next]) continue;
+              if (state.grid[next] !== tier) continue;
+              visited[next] = true;
+              queue.push(next);
+            }
+          }
+
+          if (component.length >= 3) {
+            component.sort(function(a, b) { return a - b; });
+            groups.push({ tier: tier, cells: component });
+          }
+        }
+
+        groups.sort(function(a, b) {
+          if (a.tier !== b.tier) return a.tier - b.tier;
+          return a.cells[0] - b.cells[0];
+        });
+        return groups;
+      }
+
+      function pickAnchor(group, priority) {
+        var priorityMap = {};
+        (priority || []).forEach(function(index, rank) {
+          priorityMap[index] = rank;
+        });
+        var best = group.cells[0];
+        var bestRank = Number.MAX_SAFE_INTEGER;
+        for (var i = 0; i < group.cells.length; i += 1) {
+          var idx = group.cells[i];
+          var rank = priorityMap.hasOwnProperty(idx) ? priorityMap[idx] : Number.MAX_SAFE_INTEGER - idx;
+          if (rank < bestRank) {
+            bestRank = rank;
+            best = idx;
+          }
+        }
+        return best;
+      }
+
+      function burstParticles(cellsToBurst, tierIndex, extraScale) {
+        extraScale = extraScale || 1;
+        var tier = TIERS[tierIndex];
+        for (var g = 0; g < cellsToBurst.length; g += 1) {
+          var cellRect = cells[cellsToBurst[g]].getBoundingClientRect();
+          var boardRect = boardEl.getBoundingClientRect();
+          var originX = cellRect.left - boardRect.left + cellRect.width / 2;
+          var originY = cellRect.top - boardRect.top + cellRect.height / 2;
+          var count = 10;
+          for (var i = 0; i < count; i += 1) {
+            var particle = document.createElement('span');
+            var angle = (Math.PI * 2 * i) / count + Math.random() * 0.4;
+            var distance = (28 + Math.random() * 26) * extraScale;
+            particle.className = 'particle';
+            particle.style.left = originX + 'px';
+            particle.style.top = originY + 'px';
+            particle.style.setProperty('--dx', Math.cos(angle) * distance + 'px');
+            particle.style.setProperty('--dy', Math.sin(angle) * distance + 'px');
+            particle.style.setProperty('--particle-color', tier.glow);
+            particleLayerEl.appendChild(particle);
+            window.setTimeout((function(node) {
+              return function() {
+                if (node.parentNode) node.parentNode.removeChild(node);
+              };
+            })(particle), 720);
+          }
+        }
+      }
+
+      function flashBoard() {
+        boardEl.classList.remove('merge-flash');
+        void boardEl.offsetWidth;
+        boardEl.classList.add('merge-flash');
+        window.setTimeout(function() { boardEl.classList.remove('merge-flash'); }, 230);
+      }
+
+      function wait(ms) {
+        return new Promise(function(resolve) {
+          window.setTimeout(resolve, ms);
+        });
+      }
+
+      function updateDragHighlight(index) {
+        state.hoverIndex = index;
+        renderBoard();
+      }
+
+      function getCellIndexFromPoint(x, y) {
+        var target = document.elementFromPoint(x, y);
+        if (!target || !target.closest) return null;
+        var cell = target.closest('.cell');
+        if (!cell || !cellLayerEl.contains(cell)) return null;
+        return parseInt(cell.dataset.index, 10);
+      }
+
+      function shakeBoard() {
+        boardEl.classList.remove('shake');
+        void boardEl.offsetWidth;
+        boardEl.classList.add('shake');
+        window.setTimeout(function() { boardEl.classList.remove('shake'); }, 190);
+      }
+
+      function resumeAudioContext() {
+        if (!state.soundEnabled) return;
+        if (audioContext && audioContext.state === 'suspended') {
+          audioContext.resume().catch(function() {});
+          return;
+        }
+        if (audioContext || (!window.AudioContext && !window.webkitAudioContext)) return;
+        try {
+          var Ctx = window.AudioContext || window.webkitAudioContext;
+          audioContext = new Ctx();
+        } catch (error) {
+          audioContext = null;
+        }
+      }
+
+      function playTone(freq, duration, type, volume, delay, slideTo) {
+        if (!state.soundEnabled || !audioContext) return;
+        try {
+          var startAt = audioContext.currentTime + (delay || 0);
+          var oscillator = audioContext.createOscillator();
+          var gain = audioContext.createGain();
+          oscillator.type = type || 'sine';
+          oscillator.frequency.setValueAtTime(freq, startAt);
+          if (slideTo) oscillator.frequency.exponentialRampToValueAtTime(Math.max(40, slideTo), startAt + duration);
+          gain.gain.setValueAtTime(0.0001, startAt);
+          gain.gain.exponentialRampToValueAtTime(volume || 0.035, startAt + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+          oscillator.connect(gain);
+          gain.connect(audioContext.destination);
+          oscillator.start(startAt);
+          oscillator.stop(startAt + duration + 0.03);
+        } catch (error) {
+          return;
+        }
+      }
+
+      function playSound(kind) {
+        resumeAudioContext();
+        if (!audioContext || !state.soundEnabled) return;
+        switch (kind) {
+          case 'place':
+            playTone(420, 0.12, 'triangle', 0.03, 0, 520);
+            break;
+          case 'merge':
+            playTone(540, 0.16, 'sine', 0.04, 0, 760);
+            playTone(760, 0.12, 'triangle', 0.03, 0.03, 980);
+            break;
+          case 'chain':
+            playTone(520, 0.14, 'triangle', 0.03, 0, 660);
+            playTone(740, 0.14, 'triangle', 0.028, 0.05, 920);
+            playTone(980, 0.18, 'sine', 0.024, 0.1, 1220);
+            break;
+          case 'gameover':
+            playTone(420, 0.22, 'sawtooth', 0.03, 0, 220);
+            playTone(260, 0.32, 'triangle', 0.028, 0.08, 120);
+            break;
+          default:
+            break;
+        }
+      }
+
+      function nextQueuedBall() {
+        var tierIndex = state.queue.shift();
+        fillQueue();
+        return tierIndex;
+      }
+
+      function boardIsFull() {
+        for (var i = 0; i < state.grid.length; i += 1) {
+          if (state.grid[i] === null) return false;
+        }
+        return true;
+      }
+
+      function highestTierOnBoard() {
+        var highest = 0;
+        for (var i = 0; i < state.grid.length; i += 1) {
+          if (typeof state.grid[i] === 'number' && state.grid[i] > highest) highest = state.grid[i];
+        }
+        return highest;
+      }
+
+      async function resolveMerges(priorityCells) {
+        var chain = 0;
+        var priority = Array.isArray(priorityCells) ? priorityCells.slice() : [];
+        while (true) {
+          var groups = findMergeGroups();
+          if (!groups.length) break;
+          chain += 1;
+          flashBoard();
+          groups.forEach(function(group) {
+            group.anchor = pickAnchor(group, priority);
+          });
+          groups.forEach(function(group) {
+            group.cells.forEach(function(index) {
+              var ball = cells[index].querySelector('.cell-ball');
+              if (!ball) return;
+              ball.classList.add('merging');
+              if (index === group.anchor) ball.classList.add('anchor');
+            });
+            burstParticles(group.cells, group.tier, 1 + chain * 0.08);
+          });
+
+          if (chain === 1) {
+            playSound('merge');
+          } else {
+            playSound('chain');
+            showToast('Chain x' + chain + '!');
+          }
+
+          await wait(240);
+
+          var newScore = state.score;
+          var createdAnchors = [];
+          groups.forEach(function(group) {
+            var nextTier = Math.min(group.tier + 1, TIERS.length - 1);
+            var anchor = group.anchor;
+            group.cells.forEach(function(index) {
+              state.grid[index] = null;
+            });
+            state.grid[anchor] = nextTier;
+            createdAnchors.push(anchor);
+            newScore += (group.tier + 1) * group.cells.length * 10;
+          });
+
+          state.score = newScore;
+          state.freshCells = [];
+          state.upgradedCells = createdAnchors.slice();
+          priority = createdAnchors.slice();
+          syncCounters();
+          render();
+          scheduleTransientClear(300);
+
+          var mergedCount = groups.reduce(function(total, group) { return total + group.cells.length; }, 0);
+          if (groups.length === 1) {
+            var single = groups[0];
+            setStatus('Merge Complete', single.cells.length + ' ' + TIERS[single.tier].name + ' balls collapsed into ' + TIERS[Math.min(single.tier + 1, TIERS.length - 1)].name + '. +' + ((single.tier + 1) * single.cells.length * 10) + ' points.');
+          } else {
+            setStatus('Cascade Wave ' + chain, groups.length + ' merge groups cleared at once, consuming ' + mergedCount + ' balls.');
+          }
+          persistState();
+          await wait(180);
+        }
+
+        state.upgradedCells = [];
+        renderBoard();
+        return chain;
+      }
+
+      function buildShareText() {
+        var topTier = TIERS[highestTierOnBoard()];
+        return 'Color Merge — Match & Combine Puzzle\n' +
+          'Score: ' + state.score + '\n' +
+          'Best: ' + state.highScore + '\n' +
+          'Games Played: ' + state.gamesPlayed + '\n' +
+          'Top Ball: ' + topTier.name + '\n' +
+          'Play free: https://pinisolomon.github.io/copilot-autonomous-player/games/color-merge/';
+      }
+
+      function updateFinalMessage() {
+        var topTier = TIERS[highestTierOnBoard()].name;
+        finalMessageEl.textContent = 'Final score: ' + state.score + '. Best ball: ' + topTier + '. The grid is packed solid — time for one more run.';
+      }
+
+      async function copyToClipboard(text) {
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+          try {
+            await navigator.clipboard.writeText(text);
+            return true;
+          } catch (error) {
+            return fallbackCopy(text);
+          }
+        }
+        return fallbackCopy(text);
+      }
+
+      function fallbackCopy(text) {
+        try {
+          var area = document.createElement('textarea');
+          area.value = text;
+          area.setAttribute('readonly', 'readonly');
+          area.style.position = 'fixed';
+          area.style.opacity = '0';
+          area.style.left = '-9999px';
+          document.body.appendChild(area);
+          area.focus();
+          area.select();
+          var copied = document.execCommand('copy');
+          document.body.removeChild(area);
+          return copied;
+        } catch (error) {
+          return false;
+        }
+      }
+
+      async function shareStats() {
+        var text = buildShareText();
+        var copied = await copyToClipboard(text);
+        showToast(copied ? 'Stats copied to clipboard' : 'Copy failed — try again');
+      }
+
+      function maybeShowGameOver() {
+        if (!boardIsFull() || findMergeGroups().length) return false;
+        state.gameOver = true;
+        state.hoverIndex = null;
+        updateFinalMessage();
+        setStatus('Game Over', 'The 5×5 board is full and no more merges remain. Tap New Game to restart.');
+        playSound('gameover');
+        render();
+        persistState();
+        return true;
+      }
+
+      async function placeBall(index, viaDrag) {
+        if (state.busy || state.gameOver) return false;
+        if (state.grid[index] !== null) {
+          shakeBoard();
+          setStatus('Cell Occupied', 'That spot is already taken. Choose an empty cell for the ' + TIERS[state.queue[0]].name + ' ball.');
+          showToast('Pick an empty cell');
+          return false;
+        }
+
+        resumeAudioContext();
+        state.busy = true;
+        state.lastSnapshot = cloneSnapshot();
+        var tierIndex = nextQueuedBall();
+        state.grid[index] = tierIndex;
+        state.freshCells = [index];
+        state.upgradedCells = [];
+        state.highlightedIndex = null;
+        state.hoverIndex = null;
+        playSound('place');
+        setStatus(viaDrag ? 'Placed from Queue' : 'Placed with Tap', TIERS[tierIndex].name + ' landed on the board. Checking for merges…');
+        persistState();
+        render();
+        scheduleTransientClear(250);
+        await wait(130);
+        animationToken += 1;
+        await resolveMerges([index]);
+        state.busy = false;
+        persistState();
+        render();
+        if (!maybeShowGameOver()) {
+          var groupsLeft = findMergeGroups().length;
+          if (!groupsLeft) {
+            setStatus('Board Stable', 'No automatic merges remain. Place the next ' + TIERS[state.queue[0]].name + ' ball to keep building combos.');
+          }
+        }
+        persistState();
+        render();
+        return true;
+      }
+
+      function restoreUndo() {
+        if (!state.lastSnapshot || state.undoUsed || state.busy) return;
+        applySnapshot(state.lastSnapshot);
+        state.undoUsed = true;
+        state.lastSnapshot = null;
+        setStatus('Move Undone', 'One rewind used. Re-plan the board with a cleaner setup.');
+        persistState();
+        render();
+        showToast('Last move undone');
+      }
+
+      function toggleSound() {
+        state.soundEnabled = !state.soundEnabled;
+        if (state.soundEnabled) resumeAudioContext();
+        persistState();
+        renderMeta();
+        showToast(state.soundEnabled ? 'Sound on' : 'Sound off');
+      }
+
+      function findSuggestedMove() {
+        var empties = [];
+        for (var i = 0; i < state.grid.length; i += 1) {
+          if (state.grid[i] === null) empties.push(i);
+        }
+        if (!empties.length) return null;
+        var targetTier = state.queue[0];
+        var bestIndex = empties[0];
+        var bestScore = -1;
+        for (var e = 0; e < empties.length; e += 1) {
+          var idx = empties[e];
+          var simulated = state.grid.slice();
+          simulated[idx] = targetTier;
+          var score = 0;
+          var neighbors = getNeighbors(idx);
+          for (var n = 0; n < neighbors.length; n += 1) {
+            if (simulated[neighbors[n]] === targetTier) score += 2;
+            else if (simulated[neighbors[n]] !== null) score += 0.3;
+          }
+          if (score > bestScore) {
+            bestScore = score;
+            bestIndex = idx;
+          }
+        }
+        return bestIndex;
+      }
+
+      function showHint() {
+        if (state.gameOver) {
+          showToast('Board locked — start a new game');
+          return;
+        }
+        var suggestion = findSuggestedMove();
+        if (suggestion === null) return;
+        state.highlightedIndex = suggestion;
+        renderBoard();
+        var pos = indexToRowCol(suggestion);
+        setStatus('Hint Ready', 'Try row ' + (pos.row + 1) + ', column ' + (pos.col + 1) + ' to pair your ' + TIERS[state.queue[0]].name + ' ball with nearby matches.');
+        showToast('Suggested cell highlighted');
+        window.setTimeout(function() {
+          state.highlightedIndex = null;
+          renderBoard();
+        }, 1400);
+      }
+
+      function showToast(message) {
+        toastEl.textContent = message;
+        toastEl.classList.add('show');
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(function() {
+          toastEl.classList.remove('show');
+        }, 1800);
+      }
+
+      function beginDrag(pointerId, clientX, clientY) {
+        if (state.busy || state.gameOver) return;
+        resumeAudioContext();
+        dragState = { pointerId: pointerId, tier: state.queue[0] };
+        dragGhostEl.innerHTML = renderBallMarkup(dragState.tier, 'drag-ghost-inner');
+        dragGhostEl.classList.add('show');
+        queueActiveEl.classList.add('dragging');
+        updateDragPosition(clientX, clientY);
+      }
+
+      function updateDragPosition(clientX, clientY) {
+        if (!dragState) return;
+        dragGhostEl.style.left = clientX + 'px';
+        dragGhostEl.style.top = clientY + 'px';
+        var hover = getCellIndexFromPoint(clientX, clientY);
+        state.hoverIndex = hover;
+        renderBoard();
+      }
+
+      function endDrag(clientX, clientY) {
+        if (!dragState) return;
+        var hover = getCellIndexFromPoint(clientX, clientY);
+        dragState = null;
+        dragGhostEl.classList.remove('show');
+        queueActiveEl.classList.remove('dragging');
+        state.hoverIndex = null;
+        renderBoard();
+        if (hover === null) return;
+        placeBall(hover, true);
+      }
+
+      queueActiveEl.addEventListener('pointerdown', function(event) {
+        if (event.button !== undefined && event.button !== 0) return;
+        beginDrag(event.pointerId, event.clientX, event.clientY);
+        event.preventDefault();
+      });
+
+      document.addEventListener('pointermove', function(event) {
+        if (!dragState) return;
+        updateDragPosition(event.clientX, event.clientY);
+      }, { passive: true });
+
+      document.addEventListener('pointerup', function(event) {
+        if (!dragState) return;
+        endDrag(event.clientX, event.clientY);
+      }, { passive: true });
+
+      document.addEventListener('pointercancel', function() {
+        if (!dragState) return;
+        dragState = null;
+        dragGhostEl.classList.remove('show');
+        queueActiveEl.classList.remove('dragging');
+        state.hoverIndex = null;
+        renderBoard();
+      });
+
+      queueActiveEl.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          showToast('Tap an empty cell to place the next ball');
+        }
+      });
+
+      cellLayerEl.addEventListener('click', function(event) {
+        var cell = event.target.closest('.cell');
+        if (!cell) return;
+        var index = parseInt(cell.dataset.index, 10);
+        placeBall(index, false);
+      });
+
+      cellLayerEl.addEventListener('pointermove', function(event) {
+        if (dragState) return;
+        var cell = event.target.closest('.cell');
+        if (!cell) return;
+        state.hoverIndex = parseInt(cell.dataset.index, 10);
+        renderBoard();
+      }, { passive: true });
+
+      cellLayerEl.addEventListener('pointerleave', function() {
+        if (dragState) return;
+        state.hoverIndex = null;
+        renderBoard();
+      });
+
+      document.getElementById('new-game-btn').addEventListener('click', function() { startNewGame({ incrementGames: true }); });
+      document.getElementById('play-again-btn').addEventListener('click', function() { startNewGame({ incrementGames: true }); });
+      document.getElementById('undo-btn').addEventListener('click', restoreUndo);
+      document.getElementById('share-btn').addEventListener('click', shareStats);
+      document.getElementById('share-modal-btn').addEventListener('click', shareStats);
+      document.getElementById('sound-btn').addEventListener('click', toggleSound);
+      hintBtnEl.addEventListener('click', showHint);
+
+      ['pointerdown', 'keydown', 'touchstart', 'mousedown'].forEach(function(name) {
+        window.addEventListener(name, resumeAudioContext, { passive: true, once: false });
+      });
+
+      window.addEventListener('resize', function() {
+        if (!dragState) renderBoard();
+      });
+
+      window.addEventListener('orientationchange', function() {
+        if (!dragState) renderBoard();
+      });
+
+      loadPersistentMeta();
+      createCells();
+      if (!restoreSavedGame()) {
+        startNewGame({ incrementGames: true });
+      } else {
+        render();
+        if (state.gameOver) {
+          updateFinalMessage();
+          render();
+        } else {
+          setStatus('Resume Run', 'Your saved board is back. Keep merging toward Gold.');
+        }
+      }
+
+      window.__colorMerge = {
+        state: state,
+        startNewGame: startNewGame,
+        placeBall: placeBall,
+        undo: restoreUndo,
+        share: buildShareText,
+        debug: {
+          findMergeGroups: findMergeGroups,
+          highestTierOnBoard: highestTierOnBoard,
+          boardIsFull: boardIsFull,
+          applySnapshot: applySnapshot
+        }
+      };
+    })();
+  </script>
+  <script>
+    window.SDK_OPTIONS = {
+      gameId: 'cm_color_merge_01',
+      onEvent: function(e) { if (e.name === 'SDK_GAME_START') window.__adReady = true; }
+    };
+    setTimeout(function() { window.__adReady = true; }, 5000);
+  </script>
+  <script id="gamemonetize-sdk" src="https://api.gamemonetize.com/sdk.js" async></script>
+</body>
+</html>

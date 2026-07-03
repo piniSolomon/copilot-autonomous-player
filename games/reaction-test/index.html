@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#0a0e27" />
+  <title>Reaction Test — How Fast Are You?</title>
+  <meta name="description" content="Test your reflexes in this polished reaction speed challenge. Wait for the green signal, tap instantly, beat your best time, and share your score." />
+  <meta property="og:title" content="Reaction Test — How Fast Are You?" />
+  <meta property="og:description" content="Wait for green, click instantly, and chase your best reaction time in this polished browser speed challenge." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://pinisolomon.github.io/copilot-autonomous-player/games/reaction-test/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Reaction Test — How Fast Are You?" />
+  <meta name="twitter:description" content="A dark, polished HTML5 reaction speed test with sound, stats, local best times, and mobile-friendly play." />
+  <link rel="canonical" href="https://pinisolomon.github.io/copilot-autonomous-player/games/reaction-test/" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop offset='0' stop-color='%230a0e27'/%3E%3Cstop offset='1' stop-color='%23141f4d'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Cpath d='M35 6 16 35h12l-4 23 24-32H35z' fill='%23ffe97a' stroke='%23ffffff' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0a0e27;
+      --bg-2: #050816;
+      --panel: rgba(18, 26, 58, 0.86);
+      --panel-2: rgba(12, 18, 42, 0.94);
+      --line: rgba(155, 174, 255, 0.16);
+      --line-strong: rgba(220, 231, 255, 0.24);
+      --text: #f4f7ff;
+      --muted: #a8b4e6;
+      --accent: #67e8f9;
+      --accent-2: #8b7bff;
+      --success: #5df7a9;
+      --danger: #ff708f;
+      --warn: #ffd86f;
+      --shadow: 0 26px 70px rgba(0, 0, 0, 0.42);
+      --radius: 28px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+    }
+
+    body {
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% 0%, rgba(103, 232, 249, 0.14), transparent 28%),
+        radial-gradient(circle at 85% 10%, rgba(139, 123, 255, 0.14), transparent 25%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+      padding: max(14px, env(safe-area-inset-top)) 12px max(14px, env(safe-area-inset-bottom));
+      display: flex;
+      justify-content: center;
+      -webkit-user-select: none;
+      user-select: none;
+      overflow-x: hidden;
+    }
+
+    button {
+      font: inherit;
+      border: 0;
+      cursor: pointer;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .page-shell {
+      width: min(100%, 980px);
+      min-height: calc(100vh - max(28px, env(safe-area-inset-top)) - max(28px, env(safe-area-inset-bottom)));
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 6px 4px;
+    }
+
+    .back-link {
+      font-weight: 800;
+      letter-spacing: 0.01em;
+    }
+
+    .back-link:hover,
+    .back-link:focus-visible {
+      text-decoration: underline;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .ghost-btn,
+    .primary-btn {
+      min-height: 48px;
+      padding: 0 16px;
+      border-radius: 16px;
+      transition: transform 130ms ease, filter 130ms ease, opacity 130ms ease, background 130ms ease;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .ghost-btn {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .primary-btn {
+      background: linear-gradient(180deg, rgba(103, 232, 249, 0.98), rgba(73, 162, 255, 0.98));
+      color: #07111f;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      box-shadow: 0 18px 30px rgba(55, 143, 255, 0.22);
+    }
+
+    .ghost-btn:hover,
+    .primary-btn:hover,
+    .ghost-btn:focus-visible,
+    .primary-btn:focus-visible {
+      filter: brightness(1.08);
+      outline: none;
+    }
+
+    .ghost-btn:active,
+    .primary-btn:active {
+      transform: scale(0.98);
+    }
+
+    .ghost-btn[disabled],
+    .primary-btn[disabled] {
+      opacity: 0.55;
+      cursor: not-allowed;
+      filter: none;
+      transform: none;
+    }
+
+    .game-shell {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      background: linear-gradient(180deg, rgba(15, 21, 49, 0.95), rgba(7, 12, 29, 0.96));
+      border: 1px solid var(--line);
+      border-radius: 32px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .game-shell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(103, 232, 249, 0.04), transparent 38%, rgba(139, 123, 255, 0.06));
+      pointer-events: none;
+    }
+
+    .title-wrap,
+    .arena-shell,
+    .action-row,
+    .stats-grid,
+    .info-grid {
+      position: relative;
+      z-index: 1;
+    }
+
+    .title-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      text-align: center;
+      padding-top: 2px;
+    }
+
+    .eyebrow {
+      margin: 0;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 0.76rem;
+      font-weight: 900;
+    }
+
+    .title-wrap h1 {
+      margin: 0;
+      font-size: clamp(2.2rem, 7vw, 4rem);
+      line-height: 0.98;
+      letter-spacing: -0.04em;
+      font-weight: 950;
+      background: linear-gradient(135deg, #ffffff 0%, var(--accent) 44%, #cdb7ff 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .title-wrap p:last-child {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.98rem;
+      max-width: 660px;
+      align-self: center;
+    }
+
+    .arena-shell {
+      display: flex;
+    }
+
+    .arena {
+      position: relative;
+      width: 100%;
+      min-height: clamp(340px, 56vh, 460px);
+      border-radius: 28px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: linear-gradient(180deg, rgba(18, 23, 47, 0.92), rgba(10, 14, 33, 0.98));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 22px;
+      isolation: isolate;
+      cursor: pointer;
+      touch-action: manipulation;
+      outline: none;
+      transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease, background 180ms ease;
+    }
+
+    .arena:focus-visible {
+      box-shadow: 0 0 0 2px rgba(103, 232, 249, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .arena::before,
+    .arena::after {
+      content: "";
+      position: absolute;
+      inset: -18%;
+      pointer-events: none;
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .arena::before {
+      background:
+        radial-gradient(circle at 18% 26%, rgba(255, 98, 132, 0.28), transparent 22%),
+        radial-gradient(circle at 82% 18%, rgba(103, 232, 249, 0.16), transparent 22%),
+        radial-gradient(circle at 50% 70%, rgba(139, 123, 255, 0.18), transparent 26%),
+        linear-gradient(135deg, rgba(18, 20, 53, 0.95), rgba(7, 12, 29, 0.98));
+      animation: drift 16s linear infinite;
+      transform: scale(1.02);
+    }
+
+    .arena::after {
+      inset: 0;
+      background:
+        linear-gradient(110deg, transparent 20%, rgba(255, 255, 255, 0.08) 30%, transparent 42%),
+        repeating-linear-gradient(120deg, rgba(255, 255, 255, 0.02) 0 2px, transparent 2px 20px);
+      opacity: 0.5;
+      animation: sheen 7s linear infinite;
+      mix-blend-mode: screen;
+    }
+
+    .arena[data-phase="waiting"] {
+      border-color: rgba(255, 112, 143, 0.28);
+      box-shadow: 0 0 0 1px rgba(255, 112, 143, 0.12), 0 18px 36px rgba(255, 74, 124, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .arena[data-phase="waiting"]::before {
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255, 104, 132, 0.35), transparent 20%),
+        radial-gradient(circle at 78% 28%, rgba(255, 162, 76, 0.2), transparent 18%),
+        radial-gradient(circle at 48% 82%, rgba(103, 232, 249, 0.1), transparent 24%),
+        linear-gradient(135deg, rgba(54, 12, 34, 0.96), rgba(14, 16, 43, 0.98));
+    }
+
+    .arena[data-phase="ready"] {
+      border-color: rgba(133, 255, 187, 0.44);
+      box-shadow: 0 0 0 1px rgba(133, 255, 187, 0.22), 0 0 42px rgba(51, 255, 146, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .arena[data-phase="ready"]::before {
+      background:
+        radial-gradient(circle at 26% 30%, rgba(114, 255, 191, 0.38), transparent 22%),
+        radial-gradient(circle at 74% 26%, rgba(103, 232, 249, 0.24), transparent 18%),
+        radial-gradient(circle at 52% 72%, rgba(180, 255, 218, 0.18), transparent 26%),
+        linear-gradient(135deg, rgba(11, 92, 54, 0.95), rgba(7, 53, 46, 0.98));
+      animation: drift 11s linear infinite, pulseGlow 820ms ease-in-out infinite;
+    }
+
+    .arena[data-phase="clicked"] {
+      border-color: rgba(255, 232, 122, 0.48);
+      box-shadow: 0 0 0 1px rgba(255, 232, 122, 0.24), 0 0 48px rgba(255, 212, 90, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.09);
+    }
+
+    .arena[data-phase="clicked"]::before {
+      background:
+        radial-gradient(circle at 50% 50%, rgba(255, 232, 122, 0.24), transparent 22%),
+        radial-gradient(circle at 22% 26%, rgba(114, 255, 191, 0.18), transparent 20%),
+        linear-gradient(135deg, rgba(18, 86, 56, 0.95), rgba(17, 29, 66, 0.98));
+    }
+
+    .arena[data-phase="result"][data-outcome="success"] {
+      border-color: rgba(103, 232, 249, 0.26);
+    }
+
+    .arena[data-phase="result"][data-outcome="error"] {
+      border-color: rgba(255, 112, 143, 0.34);
+      box-shadow: 0 0 0 1px rgba(255, 112, 143, 0.14), 0 18px 36px rgba(255, 74, 124, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .arena.shake {
+      animation: shake 420ms ease;
+    }
+
+    .arena-content {
+      position: relative;
+      z-index: 2;
+      width: min(100%, 700px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      text-align: center;
+    }
+
+    .status-pill,
+    .result-chip,
+    .arena-hint,
+    .mini-note,
+    .stat-card,
+    .panel {
+      background: linear-gradient(180deg, rgba(27, 35, 71, 0.84), rgba(13, 18, 41, 0.9));
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .status-pill {
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--accent);
+    }
+
+    .arena h2 {
+      margin: 0;
+      font-size: clamp(2rem, 7vw, 4rem);
+      line-height: 0.98;
+      letter-spacing: -0.05em;
+      font-weight: 940;
+      text-wrap: balance;
+    }
+
+    .arena[data-phase="ready"] h2 {
+      color: #dfffea;
+      text-shadow: 0 0 20px rgba(157, 255, 196, 0.2);
+      animation: readyText 820ms ease-in-out infinite;
+    }
+
+    .subline {
+      margin: 0;
+      max-width: 620px;
+      color: var(--muted);
+      font-size: clamp(1rem, 3vw, 1.1rem);
+      line-height: 1.55;
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: center;
+    }
+
+    .result-chip {
+      min-width: 170px;
+      padding: 12px 16px;
+      border-radius: 18px;
+      font-weight: 900;
+      font-size: clamp(1rem, 3vw, 1.2rem);
+      color: var(--text);
+    }
+
+    .result-chip.accent-success {
+      color: #dfffea;
+      border-color: rgba(133, 255, 187, 0.34);
+      background: linear-gradient(180deg, rgba(19, 77, 53, 0.9), rgba(9, 46, 34, 0.92));
+    }
+
+    .result-chip.accent-error {
+      color: #ffd7df;
+      border-color: rgba(255, 112, 143, 0.3);
+      background: linear-gradient(180deg, rgba(84, 20, 42, 0.9), rgba(47, 11, 27, 0.92));
+    }
+
+    .arena-hint {
+      padding: 10px 14px;
+      border-radius: 16px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      max-width: 520px;
+    }
+
+    .feedback-burst {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      display: grid;
+      place-items: center;
+      font-size: clamp(2.2rem, 10vw, 5.8rem);
+      font-weight: 1000;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #ffffff;
+      opacity: 0;
+      transform: scale(0.45);
+      pointer-events: none;
+      text-shadow: 0 0 26px rgba(255, 255, 255, 0.18);
+    }
+
+    .feedback-burst.show-success {
+      color: #fff5bf;
+      animation: burst 720ms cubic-bezier(.18,.84,.28,1.08);
+    }
+
+    .feedback-burst.show-error {
+      color: #ffd7df;
+      animation: burst 640ms cubic-bezier(.18,.84,.28,1.08);
+    }
+
+    .action-row {
+      display: grid;
+      gap: 10px;
+      align-items: center;
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .mini-note {
+      padding: 12px 14px;
+      border-radius: 16px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      text-align: center;
+    }
+
+    .stats-grid,
+    .info-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .stats-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .stat-card,
+    .panel {
+      border-radius: 22px;
+      padding: 14px;
+    }
+
+    .stat-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 110px;
+      gap: 6px;
+    }
+
+    .stat-card span,
+    .panel-header span {
+      color: var(--muted);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-weight: 800;
+    }
+
+    .stat-card strong {
+      font-size: clamp(1.6rem, 5vw, 2.3rem);
+      line-height: 1;
+      letter-spacing: -0.04em;
+    }
+
+    .stat-card small {
+      color: #d1daf8;
+      font-size: 0.9rem;
+    }
+
+    .info-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 220px;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .panel-header h3 {
+      margin: 0;
+      font-size: 1.05rem;
+    }
+
+    .score-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 8px;
+    }
+
+    .score-row {
+      display: grid;
+      grid-template-columns: 54px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding: 11px 12px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .score-row strong {
+      font-size: 1.02rem;
+    }
+
+    .score-row .rank {
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .score-row .score-tag {
+      font-size: 0.82rem;
+      color: #e6ebff;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 5px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .score-row.empty {
+      color: var(--muted);
+    }
+
+    .rating-display {
+      display: grid;
+      place-items: center;
+      min-height: 92px;
+      padding: 14px;
+      border-radius: 22px;
+      text-align: center;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.025));
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: clamp(1.25rem, 4vw, 1.8rem);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      color: var(--text);
+    }
+
+    .panel-copy {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 0.96rem;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+
+    @keyframes drift {
+      0% { transform: translate3d(0, 0, 0) scale(1.02) rotate(0deg); }
+      50% { transform: translate3d(-1.6%, 1.2%, 0) scale(1.06) rotate(2deg); }
+      100% { transform: translate3d(0, 0, 0) scale(1.02) rotate(0deg); }
+    }
+
+    @keyframes sheen {
+      0% { transform: translateX(-10%); }
+      100% { transform: translateX(10%); }
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { filter: saturate(1); }
+      50% { filter: saturate(1.15) brightness(1.08); }
+    }
+
+    @keyframes readyText {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+
+    @keyframes burst {
+      0% { opacity: 0; transform: scale(0.45); }
+      18% { opacity: 1; }
+      42% { opacity: 1; transform: scale(1.08); }
+      100% { opacity: 0; transform: scale(1.26); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-4px); }
+    }
+
+    @media (min-width: 760px) {
+      .action-row {
+        grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 759px) {
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 620px) {
+      body {
+        padding-inline: 10px;
+      }
+
+      .game-shell {
+        border-radius: 26px;
+        padding: 12px;
+      }
+
+      .topbar {
+        align-items: stretch;
+      }
+
+      .toolbar {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .arena {
+        min-height: 52vh;
+        padding: 18px 14px;
+      }
+
+      .status-pill,
+      .result-chip,
+      .arena-hint,
+      .mini-note,
+      .stat-card,
+      .panel,
+      .score-row {
+        border-radius: 18px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 1ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="back-link" href="../../index.html">← Back to Games</a>
+      <div class="toolbar">
+        <button class="ghost-btn" id="soundToggle" type="button">🔊 Sound On</button>
+        <button class="ghost-btn" id="shareButton" type="button">📋 Share Challenge</button>
+      </div>
+    </header>
+
+    <main class="game-shell">
+      <section class="title-wrap">
+        <p class="eyebrow">⚡ Reaction Test</p>
+        <h1>Speed Challenge</h1>
+        <p>Wait through the fake-out, then tap the instant the arena turns green.</p>
+      </section>
+
+      <section class="arena-shell">
+        <div id="arena" class="arena" data-phase="idle" data-outcome="neutral" role="button" tabindex="0" aria-label="Reaction arena. Tap when green.">
+          <div class="arena-content" aria-live="polite">
+            <div class="status-pill" id="phaseBadge">Ready</div>
+            <h2 id="headline">Tap to start. Then wait for green.</h2>
+            <p class="subline" id="subline">When the screen flips to <strong>CLICK NOW!</strong>, tap instantly. Too soon? You take a penalty.</p>
+            <div class="result-row">
+              <div class="result-chip" id="resultChip" role="status">Best 5 scores are saved on this device.</div>
+            </div>
+            <div class="arena-hint" id="arenaHint">Tap the arena, click your mouse, or press Space / Enter to begin.</div>
+          </div>
+          <div class="feedback-burst" id="feedbackBurst" aria-hidden="true">CLICK!</div>
+        </div>
+      </section>
+
+      <section class="action-row">
+        <button class="primary-btn" id="actionButton" type="button">Start Test</button>
+        <div class="mini-note" id="roundNote">Average includes a 650ms false-start penalty. Best scores only save clean reactions.</div>
+      </section>
+
+      <section class="stats-grid" aria-label="Running stats">
+        <article class="stat-card">
+          <span>Attempts</span>
+          <strong id="attemptsStat">0</strong>
+          <small id="attemptsDetail">False starts: 0</small>
+        </article>
+        <article class="stat-card">
+          <span>Average</span>
+          <strong id="averageStat">—</strong>
+          <small id="averageDetail">Penalties count toward your average.</small>
+        </article>
+        <article class="stat-card">
+          <span>Best</span>
+          <strong id="bestStat">—</strong>
+          <small id="bestDetail">Land a clean click to set a best.</small>
+        </article>
+        <article class="stat-card">
+          <span>Consistency</span>
+          <strong id="consistencyStat">—</strong>
+          <small id="consistencyDetail">Need 2 attempts to rate consistency.</small>
+        </article>
+      </section>
+
+      <section class="info-grid">
+        <article class="panel">
+          <div class="panel-header">
+            <h3>Top 5 Best Times</h3>
+            <span id="leaderboardCount">0 / 5 saved</span>
+          </div>
+          <ol class="score-list" id="scoreList"></ol>
+        </article>
+        <article class="panel">
+          <div class="panel-header">
+            <h3>Current Read</h3>
+            <span>Human benchmark</span>
+          </div>
+          <div class="rating-display" id="ratingDisplay">⚡ Warm up to earn a rating.</div>
+          <p class="panel-copy" id="ratingDescription">Under 200ms is Lightning. Clean clicks can enter your top 5 leaderboard and fuel your share challenge.</p>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <span class="sr-only" id="liveStatus" aria-live="assertive"></span>
+
+  <script>
+    window.SDK_OPTIONS = {
+      gameId: 'rt_reaction_test_01',
+      onEvent: function(e) { if (e.name === 'SDK_GAME_START') window.__adReady = true; }
+    };
+    setTimeout(function() { window.__adReady = true; }, 5000);
+  </script>
+  <script id="gamemonetize-sdk" src="https://api.gamemonetize.com/sdk.js" async></script>
+  <script>
+    (function () {
+      var STORAGE_KEYS = {
+        scores: 'rt_scores',
+        sound: 'rt_sound'
+      };
+      var PENALTY_MS = 650;
+      var WAIT_MIN = 2000;
+      var WAIT_MAX = 6000;
+      var CLICK_ANIMATION_MS = 720;
+
+      var state = 'idle';
+      var waitTimer = null;
+      var resultTimer = null;
+      var readyAt = 0;
+      var soundEnabled = loadSoundPreference();
+      var topScores = loadScores();
+      var attemptHistory = [];
+      var validTimes = [];
+      var falseStarts = 0;
+      var lastOutcome = null;
+      var audioContext = null;
+      var copyResetTimer = null;
+
+      var el = {
+        arena: document.getElementById('arena'),
+        phaseBadge: document.getElementById('phaseBadge'),
+        headline: document.getElementById('headline'),
+        subline: document.getElementById('subline'),
+        resultChip: document.getElementById('resultChip'),
+        arenaHint: document.getElementById('arenaHint'),
+        feedbackBurst: document.getElementById('feedbackBurst'),
+        actionButton: document.getElementById('actionButton'),
+        soundToggle: document.getElementById('soundToggle'),
+        shareButton: document.getElementById('shareButton'),
+        roundNote: document.getElementById('roundNote'),
+        attemptsStat: document.getElementById('attemptsStat'),
+        attemptsDetail: document.getElementById('attemptsDetail'),
+        averageStat: document.getElementById('averageStat'),
+        averageDetail: document.getElementById('averageDetail'),
+        bestStat: document.getElementById('bestStat'),
+        bestDetail: document.getElementById('bestDetail'),
+        consistencyStat: document.getElementById('consistencyStat'),
+        consistencyDetail: document.getElementById('consistencyDetail'),
+        leaderboardCount: document.getElementById('leaderboardCount'),
+        scoreList: document.getElementById('scoreList'),
+        ratingDisplay: document.getElementById('ratingDisplay'),
+        ratingDescription: document.getElementById('ratingDescription'),
+        liveStatus: document.getElementById('liveStatus')
+      };
+
+      function readStorage(key) {
+        try {
+          return window.localStorage.getItem(key);
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function writeStorage(key, value) {
+        try {
+          window.localStorage.setItem(key, value);
+        } catch (error) {
+          return false;
+        }
+        return true;
+      }
+
+      function loadScores() {
+        var raw = readStorage(STORAGE_KEYS.scores);
+        if (!raw) {
+          return [];
+        }
+        try {
+          var parsed = JSON.parse(raw);
+          if (!Array.isArray(parsed)) {
+            return [];
+          }
+          return parsed
+            .map(function (value) { return Number(value); })
+            .filter(function (value) { return Number.isFinite(value) && value > 0; })
+            .sort(function (a, b) { return a - b; })
+            .slice(0, 5);
+        } catch (error) {
+          return [];
+        }
+      }
+
+      function saveScores() {
+        writeStorage(STORAGE_KEYS.scores, JSON.stringify(topScores.slice(0, 5)));
+      }
+
+      function loadSoundPreference() {
+        return readStorage(STORAGE_KEYS.sound) !== '0';
+      }
+
+      function saveSoundPreference() {
+        writeStorage(STORAGE_KEYS.sound, soundEnabled ? '1' : '0');
+      }
+
+      function averageOf(values) {
+        if (!values.length) {
+          return null;
+        }
+        var total = values.reduce(function (sum, value) { return sum + value; }, 0);
+        return total / values.length;
+      }
+
+      function roundMs(value) {
+        return Math.round(value);
+      }
+
+      function randomDelay() {
+        return WAIT_MIN + Math.random() * (WAIT_MAX - WAIT_MIN);
+      }
+
+      function clearTimers() {
+        if (waitTimer) {
+          window.clearTimeout(waitTimer);
+          waitTimer = null;
+        }
+        if (resultTimer) {
+          window.clearTimeout(resultTimer);
+          resultTimer = null;
+        }
+      }
+
+      function getReactionRating(ms) {
+        if (ms < 200) {
+          return { label: 'Lightning', emoji: '⚡', color: '#ffe97a', copy: 'Blink and it is over.' };
+        }
+        if (ms < 250) {
+          return { label: 'Fast', emoji: '🏎️', color: '#8fe6ff', copy: 'Track-sprinter quick reflexes.' };
+        }
+        if (ms < 350) {
+          return { label: 'Average', emoji: '👍', color: '#b4ffc7', copy: 'Solid everyday human reaction speed.' };
+        }
+        if (ms <= 500) {
+          return { label: 'Slow', emoji: '🐢', color: '#ffd98c', copy: 'A little late, but still clean.' };
+        }
+        return { label: 'Sleepy', emoji: '😴', color: '#ffb8cf', copy: 'Maybe wake up with one more round.' };
+      }
+
+      function getConsistency() {
+        if (attemptHistory.length < 2) {
+          return { score: null, label: 'Calibrating' };
+        }
+        var values = attemptHistory.map(function (entry) { return entry.value; });
+        var avg = averageOf(values);
+        if (!avg) {
+          return { score: null, label: 'Calibrating' };
+        }
+        var variance = values.reduce(function (sum, value) {
+          var diff = value - avg;
+          return sum + diff * diff;
+        }, 0) / values.length;
+        var deviation = Math.sqrt(variance);
+        var falseStartRate = falseStarts / attemptHistory.length;
+        var score = Math.round(100 - (deviation / avg) * 140 - falseStartRate * 25);
+        if (score < 6) score = 6;
+        if (score > 99) score = 99;
+        var label = 'Chaotic';
+        if (score >= 88) label = 'Machine-like';
+        else if (score >= 72) label = 'Steady';
+        else if (score >= 56) label = 'Solid';
+        else if (score >= 40) label = 'Shaky';
+        return { score: score, label: label };
+      }
+
+      function updateScoreBoard() {
+        el.leaderboardCount.textContent = topScores.length + ' / 5 saved';
+        el.scoreList.innerHTML = '';
+        for (var index = 0; index < 5; index += 1) {
+          var item = document.createElement('li');
+          var score = topScores[index];
+          item.className = 'score-row' + (typeof score === 'number' ? '' : ' empty');
+
+          if (typeof score === 'number') {
+            var rating = getReactionRating(score);
+            item.innerHTML = '<span class="rank">#' + (index + 1) + '</span>' +
+              '<strong>' + score + 'ms</strong>' +
+              '<span class="score-tag">' + rating.emoji + ' ' + rating.label + '</span>';
+          } else {
+            item.innerHTML = '<span class="rank">#' + (index + 1) + '</span>' +
+              '<strong>—</strong>' +
+              '<span class="score-tag">Open slot</span>';
+          }
+          el.scoreList.appendChild(item);
+        }
+      }
+
+      function updateStats() {
+        var attemptValues = attemptHistory.map(function (entry) { return entry.value; });
+        var attemptAverage = averageOf(attemptValues);
+        var validAverage = averageOf(validTimes);
+        var sessionBest = validTimes.length ? Math.min.apply(null, validTimes) : null;
+        var consistency = getConsistency();
+        var lifetimeBest = topScores.length ? topScores[0] : null;
+
+        el.attemptsStat.textContent = String(attemptHistory.length);
+        el.attemptsDetail.textContent = 'False starts: ' + falseStarts;
+
+        el.averageStat.textContent = attemptAverage === null ? '—' : roundMs(attemptAverage) + 'ms';
+        el.averageDetail.textContent = validAverage === null
+          ? 'Penalties count toward your average.'
+          : 'Clean-click avg: ' + roundMs(validAverage) + 'ms';
+
+        el.bestStat.textContent = lifetimeBest === null ? '—' : lifetimeBest + 'ms';
+        if (lifetimeBest !== null && sessionBest !== null) {
+          el.bestDetail.textContent = 'Session best: ' + sessionBest + 'ms';
+        } else if (sessionBest !== null) {
+          el.bestDetail.textContent = 'Session best: ' + sessionBest + 'ms';
+        } else {
+          el.bestDetail.textContent = 'Land a clean click to set a best.';
+        }
+
+        el.consistencyStat.textContent = consistency.score === null ? '—' : consistency.score + '%';
+        el.consistencyDetail.textContent = consistency.score === null
+          ? 'Need 2 attempts to rate consistency.'
+          : consistency.label;
+      }
+
+      function renderCurrentRead() {
+        if (!lastOutcome) {
+          el.ratingDisplay.textContent = '⚡ Warm up to earn a rating.';
+          el.ratingDisplay.style.color = '';
+          el.ratingDescription.textContent = 'Under 200ms is Lightning. Clean clicks can enter your top 5 leaderboard and fuel your share challenge.';
+          return;
+        }
+
+        if (lastOutcome.type === 'success') {
+          var rating = lastOutcome.rating;
+          var cleanAverage = averageOf(validTimes);
+          el.ratingDisplay.textContent = rating.emoji + ' ' + rating.label + ' · ' + lastOutcome.time + 'ms';
+          el.ratingDisplay.style.color = rating.color;
+          el.ratingDescription.textContent = rating.copy + (cleanAverage === null ? '' : ' Clean average: ' + roundMs(cleanAverage) + 'ms.');
+          return;
+        }
+
+        el.ratingDisplay.textContent = '⚠️ Too early · +' + PENALTY_MS + 'ms';
+        el.ratingDisplay.style.color = '#ffd0da';
+        el.ratingDescription.textContent = 'False starts hurt your average and consistency, but never enter your best-times board.';
+      }
+
+      function updateSoundButton() {
+        el.soundToggle.textContent = soundEnabled ? '🔊 Sound On' : '🔈 Sound Off';
+      }
+
+      function announce(message) {
+        el.liveStatus.textContent = message;
+      }
+
+      function setFeedback(text, variant) {
+        el.feedbackBurst.textContent = text;
+        el.feedbackBurst.className = 'feedback-burst ' + (variant === 'error' ? 'show-error' : 'show-success');
+        window.setTimeout(function () {
+          el.feedbackBurst.className = 'feedback-burst';
+        }, CLICK_ANIMATION_MS);
+      }
+
+      function applyChipState(type) {
+        el.resultChip.className = 'result-chip';
+        if (type === 'success') {
+          el.resultChip.classList.add('accent-success');
+        } else if (type === 'error') {
+          el.resultChip.classList.add('accent-error');
+        }
+      }
+
+      function renderArena() {
+        el.arena.dataset.phase = state;
+        el.arena.dataset.outcome = lastOutcome ? lastOutcome.type : 'neutral';
+
+        if (state === 'idle') {
+          applyChipState('neutral');
+          el.phaseBadge.textContent = 'Ready';
+          el.headline.textContent = 'Tap to start. Then wait for green.';
+          el.subline.innerHTML = 'When the screen flips to <strong>CLICK NOW!</strong>, tap instantly. Too soon? You take a penalty.';
+          el.resultChip.textContent = topScores.length ? 'Best saved: ' + topScores[0] + 'ms' : 'Best 5 scores are saved on this device.';
+          el.arenaHint.textContent = 'Tap the arena, click your mouse, or press Space / Enter to begin.';
+          el.roundNote.textContent = 'Average includes a ' + PENALTY_MS + 'ms false-start penalty. Best scores only save clean reactions.';
+          return;
+        }
+
+        if (state === 'waiting') {
+          applyChipState('neutral');
+          el.phaseBadge.textContent = 'Hold';
+          el.headline.textContent = 'Wait for it...';
+          el.subline.textContent = 'Stay calm. The signal can appear any time between 2 and 6 seconds.';
+          el.resultChip.textContent = 'Do not click early.';
+          el.arenaHint.textContent = 'False start = +' + PENALTY_MS + 'ms penalty to your average.';
+          el.roundNote.textContent = 'Breathe. Watch for the green flash.';
+          return;
+        }
+
+        if (state === 'ready') {
+          applyChipState('success');
+          el.phaseBadge.textContent = 'Go';
+          el.headline.textContent = 'CLICK NOW!';
+          el.subline.textContent = 'Tap instantly. Every millisecond counts.';
+          el.resultChip.textContent = 'Green means go.';
+          el.arenaHint.textContent = 'Tap the arena right now!';
+          el.roundNote.textContent = 'Go! Go! Go!';
+          return;
+        }
+
+        if (state === 'clicked' && lastOutcome) {
+          applyChipState('success');
+          el.phaseBadge.textContent = 'Locked In';
+          el.headline.textContent = lastOutcome.time + 'ms';
+          el.subline.textContent = lastOutcome.rating.emoji + ' ' + lastOutcome.rating.label + ' — ' + lastOutcome.rating.copy;
+          el.resultChip.textContent = 'Clean click recorded.';
+          el.arenaHint.textContent = 'Nice! Loading your result...';
+          el.roundNote.textContent = 'That one felt sharp.';
+          return;
+        }
+
+        if (state === 'result' && lastOutcome && lastOutcome.type === 'success') {
+          applyChipState('success');
+          el.phaseBadge.textContent = 'Result';
+          el.headline.textContent = lastOutcome.time + 'ms';
+          el.subline.textContent = lastOutcome.rating.emoji + ' ' + lastOutcome.rating.label + ' — ' + lastOutcome.rating.copy;
+          el.resultChip.textContent = 'Tap again to chase a new best.';
+          el.arenaHint.textContent = 'Tap the arena or use Play Again for another round.';
+          el.roundNote.textContent = 'Best ever: ' + (topScores.length ? topScores[0] + 'ms' : '—') + ' • Session attempts: ' + attemptHistory.length;
+          return;
+        }
+
+        applyChipState('error');
+        el.phaseBadge.textContent = 'False Start';
+        el.headline.textContent = 'Too early!';
+        el.subline.textContent = 'Wait for the green screen before clicking. The penalty is already applied.';
+        el.resultChip.textContent = '+' + PENALTY_MS + 'ms penalty added.';
+        el.arenaHint.textContent = 'Tap again when you are ready to retry.';
+        el.roundNote.textContent = 'False starts slow your average and consistency.';
+      }
+
+      function renderActionButton() {
+        var activeRound = state === 'waiting' || state === 'ready' || state === 'clicked';
+        el.actionButton.disabled = activeRound;
+        if (state === 'idle') {
+          el.actionButton.textContent = 'Start Test';
+        } else if (state === 'waiting') {
+          el.actionButton.textContent = 'Round Active';
+        } else if (state === 'ready') {
+          el.actionButton.textContent = 'Tap the Arena';
+        } else if (state === 'clicked') {
+          el.actionButton.textContent = 'Locked In';
+        } else if (lastOutcome && lastOutcome.type === 'success') {
+          el.actionButton.textContent = 'Play Again';
+        } else {
+          el.actionButton.textContent = 'Retry';
+        }
+      }
+
+      function render() {
+        updateSoundButton();
+        renderArena();
+        renderActionButton();
+        updateStats();
+        updateScoreBoard();
+        renderCurrentRead();
+      }
+
+      function ensureAudio() {
+        if (!soundEnabled) {
+          return null;
+        }
+        var AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) {
+          return null;
+        }
+        if (!audioContext) {
+          audioContext = new AudioCtx();
+        }
+        if (audioContext.state === 'suspended') {
+          audioContext.resume();
+        }
+        return audioContext;
+      }
+
+      function playTone(frequency, duration, type, gain, offset) {
+        var context = ensureAudio();
+        if (!context) {
+          return;
+        }
+        var startAt = context.currentTime + (offset || 0);
+        var oscillator = context.createOscillator();
+        var envelope = context.createGain();
+        oscillator.type = type || 'sine';
+        oscillator.frequency.setValueAtTime(frequency, startAt);
+        envelope.gain.setValueAtTime(0.0001, startAt);
+        envelope.gain.exponentialRampToValueAtTime(gain || 0.035, startAt + 0.01);
+        envelope.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+        oscillator.connect(envelope);
+        envelope.connect(context.destination);
+        oscillator.start(startAt);
+        oscillator.stop(startAt + duration + 0.02);
+      }
+
+      function playReadySound() {
+        playTone(660, 0.16, 'sine', 0.035, 0);
+        playTone(880, 0.18, 'triangle', 0.03, 0.08);
+      }
+
+      function playSuccessSound() {
+        playTone(980, 0.08, 'triangle', 0.03, 0);
+        playTone(1320, 0.12, 'sine', 0.028, 0.05);
+      }
+
+      function playErrorSound() {
+        playTone(210, 0.16, 'sawtooth', 0.035, 0);
+        playTone(140, 0.22, 'square', 0.02, 0.08);
+      }
+
+      function saveValidTime(time) {
+        topScores.push(time);
+        topScores.sort(function (a, b) { return a - b; });
+        topScores = topScores.slice(0, 5);
+        saveScores();
+      }
+
+      function beginRound() {
+        clearTimers();
+        lastOutcome = null;
+        readyAt = 0;
+        state = 'waiting';
+        announce('Round started. Wait for green.');
+        render();
+        waitTimer = window.setTimeout(function () {
+          state = 'ready';
+          readyAt = performance.now();
+          playReadySound();
+          announce('Click now.');
+          render();
+        }, randomDelay());
+      }
+
+      function registerFalseStart() {
+        clearTimers();
+        falseStarts += 1;
+        attemptHistory.push({ value: PENALTY_MS, penalty: true });
+        lastOutcome = { type: 'error' };
+        state = 'result';
+        el.arena.classList.remove('shake');
+        void el.arena.offsetWidth;
+        el.arena.classList.add('shake');
+        playErrorSound();
+        setFeedback('Too soon!', 'error');
+        announce('Too early. Penalty applied.');
+        render();
+      }
+
+      function registerReaction() {
+        if (state !== 'ready') {
+          return;
+        }
+        var reactionTime = Math.max(1, roundMs(performance.now() - readyAt));
+        var rating = getReactionRating(reactionTime);
+        clearTimers();
+        validTimes.push(reactionTime);
+        attemptHistory.push({ value: reactionTime, penalty: false });
+        saveValidTime(reactionTime);
+        lastOutcome = {
+          type: 'success',
+          time: reactionTime,
+          rating: rating
+        };
+        state = 'clicked';
+        playSuccessSound();
+        setFeedback('CLICK!', 'success');
+        announce('Reaction time ' + reactionTime + ' milliseconds.');
+        render();
+        resultTimer = window.setTimeout(function () {
+          state = 'result';
+          render();
+        }, CLICK_ANIMATION_MS);
+      }
+
+      function handleArenaActivation(event) {
+        if (event) {
+          event.preventDefault();
+        }
+        ensureAudio();
+        if (state === 'waiting') {
+          registerFalseStart();
+          return;
+        }
+        if (state === 'ready') {
+          registerReaction();
+          return;
+        }
+        if (state === 'clicked') {
+          return;
+        }
+        beginRound();
+      }
+
+      function buildShareText() {
+        var best = topScores.length ? topScores[0] + 'ms' : '—';
+        var avgSource = validTimes.length ? averageOf(validTimes) : averageOf(topScores);
+        var average = avgSource === null ? '—' : roundMs(avgSource) + 'ms';
+        return '⚡ Reaction Test ⚡\nBest: ' + best + ' | Average: ' + average + '\nCan you beat me?\nPlay: ' + window.location.href;
+      }
+
+      function fallbackCopy(text) {
+        var area = document.createElement('textarea');
+        area.value = text;
+        area.setAttribute('readonly', 'readonly');
+        area.style.position = 'fixed';
+        area.style.top = '0';
+        area.style.left = '-9999px';
+        document.body.appendChild(area);
+        area.focus();
+        area.select();
+        var success = false;
+        try {
+          success = document.execCommand('copy');
+        } catch (error) {
+          success = false;
+        }
+        document.body.removeChild(area);
+        return success;
+      }
+
+      function pulseShareButton(success) {
+        if (copyResetTimer) {
+          window.clearTimeout(copyResetTimer);
+        }
+        el.shareButton.textContent = success ? '✅ Copied!' : '⚠️ Copy failed';
+        copyResetTimer = window.setTimeout(function () {
+          el.shareButton.textContent = '📋 Share Challenge';
+        }, 1800);
+      }
+
+      function shareChallenge() {
+        var text = buildShareText();
+        var copied = false;
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+          navigator.clipboard.writeText(text).then(function () {
+            pulseShareButton(true);
+          }).catch(function () {
+            copied = fallbackCopy(text);
+            pulseShareButton(copied);
+          });
+          return;
+        }
+        copied = fallbackCopy(text);
+        pulseShareButton(copied);
+      }
+
+      el.arena.addEventListener('pointerdown', handleArenaActivation);
+      el.actionButton.addEventListener('click', function () {
+        ensureAudio();
+        if (state === 'waiting' || state === 'ready' || state === 'clicked') {
+          return;
+        }
+        beginRound();
+      });
+
+      el.soundToggle.addEventListener('click', function (event) {
+        event.stopPropagation();
+        soundEnabled = !soundEnabled;
+        saveSoundPreference();
+        if (soundEnabled) {
+          ensureAudio();
+          playTone(720, 0.08, 'sine', 0.025, 0);
+        }
+        render();
+      });
+
+      el.shareButton.addEventListener('click', function (event) {
+        event.stopPropagation();
+        shareChallenge();
+      });
+
+      document.addEventListener('keydown', function (event) {
+        var isActivationKey = event.code === 'Space' || event.code === 'Enter';
+        if (!isActivationKey) {
+          return;
+        }
+        var target = event.target;
+        var tagName = target && target.tagName ? target.tagName.toLowerCase() : '';
+        if (tagName === 'button' || tagName === 'a') {
+          return;
+        }
+        handleArenaActivation(event);
+      });
+
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden && (state === 'waiting' || state === 'ready')) {
+          clearTimers();
+          lastOutcome = { type: 'error' };
+          state = 'result';
+          announce('Round cancelled while tab was hidden.');
+          render();
+        }
+      });
+
+      updateSoundButton();
+      render();
+    }());
+  </script>
+</body>
+</html>
