@@ -462,6 +462,46 @@
         clickBonus: 20,
         costMult: 1.4,
       },
+      {
+        id: 'portal',
+        name: 'Cookie Portal',
+        icon: '🌀',
+        desc: 'Interdimensional cookies: 5K cookies/sec',
+        baseCost: 250000,
+        cpsBonus: 5000,
+        clickBonus: 0,
+        costMult: 1.15,
+      },
+      {
+        id: 'alchemy',
+        name: 'Alchemy Lab',
+        icon: '⚗️',
+        desc: 'Transmutes gold into cookies: 25K cookies/sec',
+        baseCost: 1500000,
+        cpsBonus: 25000,
+        clickBonus: 0,
+        costMult: 1.15,
+      },
+      {
+        id: 'timemachine',
+        name: 'Time Machine',
+        icon: '⏰',
+        desc: 'Harvests past cookies: 100K cookies/sec',
+        baseCost: 10000000,
+        cpsBonus: 100000,
+        clickBonus: 0,
+        costMult: 1.15,
+      },
+      {
+        id: 'diamond',
+        name: 'Diamond Click',
+        icon: '💎',
+        desc: '+100 cookies per click',
+        baseCost: 50000,
+        cpsBonus: 0,
+        clickBonus: 100,
+        costMult: 1.5,
+      },
     ];
 
     // ── Helpers ────────────────────────────────────────────────────────────
@@ -703,6 +743,10 @@
       { id: 'five_prestige', icon: '💎', name: 'Veteran', desc: 'Prestige 5 times', check: () => state.prestige >= 5 },
       { id: 'cps_100', icon: '⚡', name: 'Speed Baker', desc: 'Reach 100 cookies/sec', check: () => state.cps >= 100 },
       { id: 'cps_1000', icon: '🚀', name: 'Hyperdrive', desc: 'Reach 1,000 cookies/sec', check: () => state.cps >= 1000 },
+      { id: 'ten_million', icon: '🏆', name: 'Mega Baker', desc: 'Bake 10,000,000 cookies', check: () => state.allTime >= 10000000 },
+      { id: 'billion', icon: '🌍', name: 'World Baker', desc: 'Bake 1,000,000,000 cookies', check: () => state.allTime >= 1000000000 },
+      { id: 'cps_10k', icon: '🌀', name: 'Portal Master', desc: 'Reach 10,000 cookies/sec', check: () => state.cps >= 10000 },
+      { id: 'cps_100k', icon: '⏰', name: 'Time Lord', desc: 'Reach 100,000 cookies/sec', check: () => state.cps >= 100000 },
     ];
 
     let unlockedAchievements = JSON.parse(localStorage.getItem('ck_achievements') || '[]');
