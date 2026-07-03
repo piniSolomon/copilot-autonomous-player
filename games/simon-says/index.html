@@ -1410,6 +1410,16 @@
           schedule(playSequence, 260);
         } else if (state.phase === 'starting') {
           schedule(startNextRound, 260);
+        } else if (state.phase === 'cleared') {
+          schedule(startNextRound, 260);
+        } else if (state.phase === 'input') {
+          if (state.inputIndex > 0) {
+            setStatus('Your Turn', 'Back to your turn.', state.inputIndex + ' of ' + state.sequence.length + ' correct.');
+          } else {
+            setStatus('Your Turn', 'Back to your turn.', 'Tap ' + state.sequence.length + ' notes in order.');
+          }
+          updateHud();
+          return;
         }
 
         if (state.phase !== 'idle' && state.phase !== 'gameover') {
@@ -1523,7 +1533,28 @@
         window.__adReady = true;
       }
     }, 5000);
+
+    (function () {
+      var slot = document.getElementById('gamemonetize-slot');
+      var isLocalHost = /^(localhost|127(?:\.\d{1,3}){3})$/i.test(window.location.hostname);
+      var shouldLoadSdk = window.location.protocol === 'https:' && !isLocalHost;
+
+      if (!shouldLoadSdk) {
+        window.__adReady = true;
+        if (slot) slot.textContent = 'GameMonetize SDK loads on HTTPS builds';
+        return;
+      }
+
+      var script = document.createElement('script');
+      script.id = 'gamemonetize-sdk';
+      script.src = 'https://api.gamemonetize.com/sdk.js';
+      script.async = true;
+      script.onerror = function () {
+        window.__adReady = true;
+        if (slot) slot.textContent = 'Ad network unavailable';
+      };
+      document.body.appendChild(script);
+    })();
   </script>
-  <script id="gamemonetize-sdk" src="https://api.gamemonetize.com/sdk.js" async></script>
 </body>
 </html>

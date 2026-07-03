@@ -180,6 +180,10 @@
 
     .overlay.hidden { display: none; }
 
+    #menuOverlay .panel {
+      pointer-events: none;
+    }
+
     .panel {
       width: min(100%, 320px);
       border-radius: 26px;
@@ -507,12 +511,31 @@
       }
     };
 
+    function mountGameMonetizeSdk() {
+      if (window.location.protocol !== 'https:') {
+        window.sdk = null;
+        window.__adReady = true;
+        return;
+      }
+      var script = document.createElement('script');
+      script.id = 'gamemonetize-sdk';
+      script.src = 'https://api.gamemonetize.com/sdk.js';
+      script.async = true;
+      script.onerror = function () {
+        window.sdk = null;
+        window.__adReady = true;
+      };
+      document.head.appendChild(script);
+    }
+
     var _adFallbackTimer = setTimeout(function () {
       if (!window.__adReady) {
         window.sdk = null;
         window.__adReady = true;
       }
     }, 5000);
+
+    mountGameMonetizeSdk();
   </script>
 
   <script>
@@ -777,6 +800,7 @@
         state.games += 1;
         saveStats();
         updateHud();
+        syncPanels();
         flap();
       }
 
@@ -1508,7 +1532,5 @@
       window.requestAnimationFrame(loop);
     })();
   </script>
-
-  <script id="gamemonetize-sdk" src="https://api.gamemonetize.com/sdk.js" async></script>
 </body>
 </html>

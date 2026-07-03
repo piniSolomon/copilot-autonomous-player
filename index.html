@@ -253,7 +253,7 @@
 <body>
   <header>
     <h1>🎮 Free Web Games</h1>
-    <p>12 instant casual games — no download, no install, no sign-up</p>
+    <p>14 instant casual games — no download, no install, no sign-up</p>
   </header>
 
   <!-- Ad banner top -->
@@ -509,6 +509,46 @@
           <span class="play-btn" style="background:#c62828">▶ Play Now</span>
         </div>
       </a>
+
+      <!-- Game 13: Flappy Bird -->
+      <a href="games/flappy-bird/index.html" class="game-card" aria-label="Play Flappy Bird — tap to fly arcade game">
+        <div class="game-thumb" style="background: linear-gradient(135deg, #4fc3f7, #81d4fa, #b3e5fc); font-size: 3rem;">
+          🐦
+          <span class="game-thumb-badge" style="background:#0288d1">FLY</span>
+          <span class="game-thumb-badge" style="background:#e91e63;right:8px;left:auto;">NEW!</span>
+        </div>
+        <div class="game-info">
+          <h2>🐦 Flappy Bird</h2>
+          <p>Tap to fly through pipes! Earn medals from Bronze to Diamond. Day/night cycle, speed ramps, and parallax clouds.</p>
+          <div class="game-tags">
+            <span class="tag">Arcade</span>
+            <span class="tag">Tap</span>
+            <span class="tag">Reflex</span>
+            <span class="tag">Mobile</span>
+          </div>
+          <span class="play-btn" style="background:#0288d1">▶ Play Now</span>
+        </div>
+      </a>
+
+      <!-- Game 14: Simon Says -->
+      <a href="games/simon-says/index.html" class="game-card" aria-label="Play Simon Says — pattern memory game">
+        <div class="game-thumb" style="background: linear-gradient(135deg, #e53935, #1e88e5, #43a047, #fdd835); font-size: 3rem;">
+          🧠
+          <span class="game-thumb-badge" style="background:#6a1b9a">MEMORY</span>
+          <span class="game-thumb-badge" style="background:#e91e63;right:8px;left:auto;">NEW!</span>
+        </div>
+        <div class="game-info">
+          <h2>🧠 Simon Says</h2>
+          <p>Repeat the color pattern! Musical tones, 3 difficulty modes, and milestones. How long can your memory hold?</p>
+          <div class="game-tags">
+            <span class="tag">Memory</span>
+            <span class="tag">Pattern</span>
+            <span class="tag">Music</span>
+            <span class="tag">Mobile</span>
+          </div>
+          <span class="play-btn" style="background:#6a1b9a">▶ Play Now</span>
+        </div>
+      </a>
     </div>
 
     <!-- Mid-page ad -->
@@ -567,10 +607,12 @@
       <a href="games/typing-speed/index.html">⌨️ Typing Speed</a>
       <a href="games/tic-tac-toe/index.html">❌ Tic Tac Toe</a>
       <a href="games/brick-breaker/index.html">🧱 Brick Breaker</a>
+      <a href="games/flappy-bird/index.html">🐦 Flappy Bird</a>
+      <a href="games/simon-says/index.html">🧠 Simon Says</a>
       <a href="https://github.com/piniSolomon/copilot-autonomous-player">GitHub</a>
     </div>
     <div>© 2026 Free Web Games — All games are free to play</div>
-    <div style="font-size:0.7rem;color:rgba(255,255,255,0.3);margin-top:4px;">Built with ❤️ by AI — 12 games, 183+ E2E tests</div>
+    <div style="font-size:0.7rem;color:rgba(255,255,255,0.3);margin-top:4px;">Built with ❤️ by AI — 14 games, 200+ E2E tests</div>
   </footer>
 
   <script>
@@ -599,7 +641,9 @@
         'games/snake/index.html',
         'games/typing-speed/index.html',
         'games/tic-tac-toe/index.html',
-        'games/brick-breaker/index.html'
+        'games/brick-breaker/index.html',
+        'games/flappy-bird/index.html',
+        'games/simon-says/index.html'
       ];
       window.location.href = games[Math.floor(Math.random() * games.length)];
     });
