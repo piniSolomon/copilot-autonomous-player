@@ -253,7 +253,7 @@
 <body>
   <header>
     <h1>🎮 Free Web Games</h1>
-    <p>11 instant casual games — no download, no install, no sign-up</p>
+    <p>12 instant casual games — no download, no install, no sign-up</p>
   </header>
 
   <!-- Ad banner top -->
@@ -489,7 +489,30 @@
           <span class="play-btn" style="background:#00838f">▶ Play Now</span>
         </div>
       </a>
+
+      <!-- Game 12: Brick Breaker -->
+      <a href="games/brick-breaker/index.html" class="game-card" aria-label="Play Brick Breaker — breakout arcade game">
+        <div class="game-thumb" style="background: linear-gradient(135deg, #d32f2f, #ff9800, #fdd835); font-size: 3rem;">
+          🧱
+          <span class="game-thumb-badge" style="background:#c62828">ARCADE</span>
+          <span class="game-thumb-badge" style="background:#e91e63;right:8px;left:auto;">NEW!</span>
+        </div>
+        <div class="game-info">
+          <h2>🧱 Brick Breaker</h2>
+          <p>Classic Breakout arcade! Smash through 5 levels of bricks with power-ups, multi-hit blocks, and ball trail effects.</p>
+          <div class="game-tags">
+            <span class="tag">Arcade</span>
+            <span class="tag">Breakout</span>
+            <span class="tag">Levels</span>
+            <span class="tag">Mobile</span>
+          </div>
+          <span class="play-btn" style="background:#c62828">▶ Play Now</span>
+        </div>
+      </a>
     </div>
+
+    <!-- Mid-page ad -->
+    <div class="ad-mid">
       <span class="ad-label">ADVERTISEMENT</span>
       <div id="ad-mid" style="min-height:90px; display:flex; align-items:center; justify-content:center; width:100%;">
         <!-- GameMonetize rectangle: replace with actual SDK call -->
@@ -543,6 +566,7 @@
       <a href="games/snake/index.html">🐍 Snake</a>
       <a href="games/typing-speed/index.html">⌨️ Typing Speed</a>
       <a href="games/tic-tac-toe/index.html">❌ Tic Tac Toe</a>
+      <a href="games/brick-breaker/index.html">🧱 Brick Breaker</a>
       <a href="https://github.com/piniSolomon/copilot-autonomous-player">GitHub</a>
     </div>
     <div>© 2026 Free Web Games — All games are free to play</div>
@@ -573,7 +597,8 @@
         'games/color-merge/index.html',
         'games/snake/index.html',
         'games/typing-speed/index.html',
-        'games/tic-tac-toe/index.html'
+        'games/tic-tac-toe/index.html',
+        'games/brick-breaker/index.html'
       ];
       window.location.href = games[Math.floor(Math.random() * games.length)];
     });
