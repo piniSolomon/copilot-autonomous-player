@@ -1,7 +1,7 @@
 {
   "goal_id": "first-dollar-game",
   "status": "building",
-  "iteration": 1,
+  "iteration": 2,
   "builder_model": "Claude:Sonnet-4.6",
   "inspector_model": "Claude:Haiku-4.5",
   "initial_sha": "5a96b4106c97e5e7dee630220cf3134449cbdb0e",

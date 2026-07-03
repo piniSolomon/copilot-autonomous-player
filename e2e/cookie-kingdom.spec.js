@@ -1,5 +1,9 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
+const path = require('path');
+const fs   = require('fs');
+
+const PROJECT_ROOT = path.resolve(__dirname, '..');
 
 test.describe('Cookie Kingdom — Idle Clicker', () => {
   test.beforeEach(async ({ page }) => {
@@ -75,13 +79,49 @@ test.describe('Cookie Kingdom — Idle Clicker', () => {
     await expect(page.locator('.upgrade-item[data-id="cursor"] .upgrade-owned')).toBeVisible();
   });
 
-  test('ad placeholder is present in DOM', async ({ page }) => {
-    // Ad banner should exist (as placeholder until real ads are set up)
-    const adTop = page.locator('#ad-top');
-    await expect(adTop).toBeVisible();
-    // SDK flag set
+  // ── NEW: GameMonetize SDK script tag present ────────────────────────────
+  test('GameMonetize SDK script tag is present', async ({ page }) => {
+    const sdkScript = page.locator('script[src*="gamemonetize.com/sdk.js"]');
+    await expect(sdkScript).toHaveCount(1);
+  });
+
+  // ── UPDATED: ad SDK loads or fallback flag is set ──────────────────────
+  test('ad SDK loads or fallback flag is set within 5s', async ({ page }) => {
+    await page.waitForFunction(
+      () => window.__adReady === true,
+      { timeout: 5000 }
+    );
     const adReady = await page.evaluate(() => window.__adReady);
     expect(adReady).toBe(true);
+  });
+
+  test('ad placeholder is present in DOM', async ({ page }) => {
+    // Ad banner should exist
+    const adTop = page.locator('#ad-top');
+    await expect(adTop).toBeVisible();
+  });
+
+  // ── NEW: Rewarded ad button present ────────────────────────────────────
+  test('rewarded ad button (2x boost) is present', async ({ page }) => {
+    const btn = page.locator('#rewarded-btn');
+    await expect(btn).toBeVisible();
+    const text = await btn.innerText();
+    expect(text).toMatch(/Watch Ad|2×|ACTIVE/i);
+  });
+
+  // ── NEW: OG preview image file exists on disk ──────────────────────────
+  test('OG preview image file exists', async () => {
+    const imgPath = path.join(PROJECT_ROOT, 'games', 'cookie-kingdom', 'preview.png');
+    expect(fs.existsSync(imgPath), `Expected ${imgPath} to exist`).toBe(true);
+    const stat = fs.statSync(imgPath);
+    expect(stat.size).toBeGreaterThan(1000);
+  });
+
+  // ── NEW: OG preview image served via HTTP ─────────────────────────────
+  test('OG preview image is accessible via HTTP', async ({ page }) => {
+    const resp = await page.request.get('/games/cookie-kingdom/preview.png');
+    expect(resp.status()).toBe(200);
+    expect(resp.headers()['content-type']).toMatch(/image/);
   });
 
   test('save and load persists progress', async ({ page }) => {

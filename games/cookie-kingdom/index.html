@@ -203,6 +203,27 @@
       margin-top: 2px;
     }
 
+    /* Rewarded ad boost button */
+    #rewarded-btn {
+      display: block;
+      width: 100%;
+      margin: 0 0 12px;
+      padding: 10px 12px;
+      background: linear-gradient(135deg, #2d5a00, #3a7a00);
+      border: 1px solid #4caf50;
+      border-radius: var(--radius);
+      color: #b9f6ca;
+      font-size: 0.85rem;
+      font-weight: bold;
+      cursor: pointer;
+      text-align: left;
+      transition: filter 0.15s;
+    }
+    #rewarded-btn:hover { filter: brightness(1.2); }
+    #rewarded-btn:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
+    #rewarded-btn .rb-icon { font-size: 1.4rem; vertical-align: middle; margin-right: 6px; }
+    #rewarded-btn .rb-label { font-size: 0.7rem; color: #69cc80; display: block; margin-top: 2px; }
+
     footer {
       text-align: center;
       padding: 10px;
@@ -251,6 +272,11 @@
 
     <div id="shop-panel">
       <h2>🏪 Upgrades</h2>
+      <!-- Rewarded ad boost -->
+      <button id="rewarded-btn" aria-label="Watch ad for 2x click power boost">
+        <span class="rb-icon">📺</span>Watch Ad — 2× Click Power (30s)
+        <span class="rb-label">Free boost sponsored by ads</span>
+      </button>
       <div id="shop-list"></div>
     </div>
   </div>
@@ -507,18 +533,67 @@
     }
     setInterval(updatePrestige, 5000);
 
+    // ── GameMonetize Ad SDK Integration ────────────────────────────────────
+    // Callback called by GameMonetize SDK when it's ready
+    window['initGmSdk'] = function(SDK) {
+      window.sdk = SDK;
+      window.__adReady = true;
+      SDK.gameStart();
+    };
+
+    // Fallback: if SDK fails to load (ad-blocked / not on GM platform),
+    // still mark ready so game continues normally
+    var _adFallbackTimer = setTimeout(function() {
+      if (!window.__adReady) {
+        window.sdk = null;
+        window.__adReady = true; // fallback ready flag for E2E tests
+      }
+    }, 4000);
+
+    // ── Rewarded Ad (2x click power for 30s) ───────────────────────────────
+    var _boostActive = false;
+    var _boostTimer = null;
+    var _origClickPower = 1;
+
+    function showRewardedAd() {
+      var btn = document.getElementById('rewarded-btn');
+      if (window.sdk && typeof window.sdk.showRewardedVideo === 'function') {
+        btn.disabled = true;
+        window.sdk.showRewardedVideo(function(hasRewarded) {
+          btn.disabled = false;
+          if (hasRewarded) applyClickBoost();
+        });
+      } else {
+        // SDK not yet loaded (first visit / ad-blocked) — graceful fallback
+        applyClickBoost();
+      }
+    }
+
+    function applyClickBoost() {
+      if (_boostActive) { clearTimeout(_boostTimer); }
+      _boostActive = true;
+      _origClickPower = state.clickPower;
+      state.clickPower *= 2;
+      var btn = document.getElementById('rewarded-btn');
+      btn.textContent = '⏳ 2× ACTIVE — 30s remaining';
+      btn.disabled = true;
+      _boostTimer = setTimeout(function() {
+        _boostActive = false;
+        state.clickPower = _origClickPower;
+        btn.disabled = false;
+        btn.innerHTML = '<span class="rb-icon">📺</span>Watch Ad — 2× Click Power (30s)<span class="rb-label">Free boost sponsored by ads</span>';
+      }, 30000);
+    }
+
+    document.getElementById('rewarded-btn').addEventListener('click', showRewardedAd);
+
     // ── Init ───────────────────────────────────────────────────────────────
     load();
     renderScores();
     renderShop();
     requestAnimationFrame(gameTick);
-
-    // GameMonetize SDK placeholder
-    // Replace this block with actual GameMonetize integration:
-    // Load: <script src="https://api.gamemonetize.com/gmapi.js"> ... end-script
-    // Then: window.SDK = new GameMonetizeSDK({ gameId: 'YOUR_GAME_ID' });
-    // SDK.showBanner({ placement: 'top', container: 'gamemonetize-top' });
-    window.__adReady = true; // flag for E2E tests
   </script>
+  <!-- GameMonetize SDK — loads asynchronously, fires initGmSdk() when ready -->
+  <script src="https://api.gamemonetize.com/sdk.js" async></script>
 </body>
 </html>

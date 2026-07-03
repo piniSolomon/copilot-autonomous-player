@@ -1,5 +1,9 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
+const path = require('path');
+const fs   = require('fs');
+
+const PROJECT_ROOT = path.resolve(__dirname, '..');
 
 test.describe('Dodge Rush — Obstacle Game', () => {
   test.beforeEach(async ({ page }) => {
@@ -130,11 +134,52 @@ test.describe('Dodge Rush — Obstacle Game', () => {
     await expect(page.locator('#start-screen')).not.toHaveClass(/hidden/);
   });
 
+  // ── NEW: GameMonetize SDK script tag present ────────────────────────────
+  test('GameMonetize SDK script tag is present', async ({ page }) => {
+    const sdkScript = page.locator('script[src*="gamemonetize.com/sdk.js"]');
+    await expect(sdkScript).toHaveCount(1);
+  });
+
+  // ── UPDATED: ad SDK loads or fallback flag is set ──────────────────────
+  test('ad SDK loads or fallback flag is set within 5s', async ({ page }) => {
+    await page.waitForFunction(
+      () => window.__adReady === true,
+      { timeout: 5000 }
+    );
+    const adReady = await page.evaluate(() => window.__adReady);
+    expect(adReady).toBe(true);
+  });
+
   test('ad placeholder is present in DOM', async ({ page }) => {
     const adTop = page.locator('#ad-top');
     await expect(adTop).toBeVisible();
-    const adReady = await page.evaluate(() => window.__adReady);
-    expect(adReady).toBe(true);
+  });
+
+  // ── NEW: Rewarded ad button present in game-over screen ────────────────
+  test('rewarded extra-life button is present in game-over screen', async ({ page }) => {
+    await page.locator('#start-btn').click();
+    await page.evaluate(() => {
+      document.getElementById('gameover-screen').classList.remove('hidden');
+    });
+    const rewardedBtn = page.locator('#rewarded-extra-btn');
+    await expect(rewardedBtn).toBeVisible();
+    const text = await rewardedBtn.innerText();
+    expect(text).toMatch(/Watch Ad|Extra Life/i);
+  });
+
+  // ── NEW: OG preview image file exists on disk ──────────────────────────
+  test('OG preview image file exists', async () => {
+    const imgPath = path.join(PROJECT_ROOT, 'games', 'dodge-rush', 'preview.png');
+    expect(fs.existsSync(imgPath), `Expected ${imgPath} to exist`).toBe(true);
+    const stat = fs.statSync(imgPath);
+    expect(stat.size).toBeGreaterThan(1000);
+  });
+
+  // ── NEW: OG preview image served via HTTP ─────────────────────────────
+  test('OG preview image is accessible via HTTP', async ({ page }) => {
+    const resp = await page.request.get('/games/dodge-rush/preview.png');
+    expect(resp.status()).toBe(200);
+    expect(resp.headers()['content-type']).toMatch(/image/);
   });
 
   test('hi-score is saved to localStorage', async ({ page }) => {

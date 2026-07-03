@@ -359,11 +359,18 @@
   </footer>
 
   <script>
-    // GameMonetize SDK placeholder
-    // When approved, replace with:
-    // <script src="https://api.gamemonetize.com/gmapi.js"></script>
-    // window.gm_sdk = GameMonetize({ key: 'YOUR_KEY' });
-    window.__adReady = true;
+    // GameMonetize SDK integration
+    window['initGmSdk'] = function(SDK) {
+      window.sdk = SDK;
+      window.__adReady = true;
+      SDK.gameStart();
+    };
+    // Fallback if SDK blocked / not available
+    setTimeout(function() {
+      if (!window.__adReady) { window.__adReady = true; }
+    }, 4000);
   </script>
+  <!-- GameMonetize SDK — loads asynchronously, fires initGmSdk() when ready -->
+  <script src="https://api.gamemonetize.com/sdk.js" async></script>
 </body>
 </html>

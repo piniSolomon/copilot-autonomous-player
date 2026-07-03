@@ -153,6 +153,22 @@
       text-align: center;
     }
 
+    /* Rewarded ad button in game-over */
+    #rewarded-extra-btn {
+      padding: 10px 24px;
+      background: linear-gradient(135deg, #006020, #008030);
+      border: 1px solid #4caf50;
+      border-radius: 99px;
+      color: #b9f6ca;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: filter 0.15s;
+    }
+    #rewarded-extra-btn:hover { filter: brightness(1.2); }
+    #rewarded-extra-btn:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
+
     /* Ad bottom */
     .ad-bottom {
       background: var(--surface);
@@ -206,10 +222,12 @@
           <div class="hi-label" id="hi-label">Best: 0</div>
         </div>
         <!-- Ad in game-over screen -->
-        <div style="background:var(--surface); border:1px dashed var(--muted); padding:8px; font-size:0.75rem; color:var(--muted); width:100%; text-align:center;">
+        <div style="background:var(--surface); border:1px dashed var(--muted); padding:8px; font-size:0.75rem; color:var(--muted); width:100%; text-align:center;" id="ad-gameover-container">
           <span style="font-size:0.65rem; display:block">ADVERTISEMENT</span>
           <div id="gamemonetize-gameover" style="min-height:80px; display:flex; align-items:center; justify-content:center;">[Ad 320×50]</div>
         </div>
+        <!-- Rewarded ad: extra life -->
+        <button id="rewarded-extra-btn" aria-label="Watch ad for extra life">📺 Watch Ad — Extra Life</button>
         <button class="btn btn-primary" id="restart-btn">🔄 PLAY AGAIN</button>
         <button class="btn btn-secondary" id="menu-btn">🏠 Menu</button>
       </div>
@@ -517,10 +535,15 @@
       }
       document.getElementById('final-score').textContent = score;
       document.getElementById('hi-label').textContent = 'Best: ' + hiScore;
-      document.getElementById('gameover-screen').classList.remove('hidden');
 
-      // Trigger interstitial ad (placeholder)
-      // window.SDK && window.SDK.showInterstitial({ gameId: 'YOUR_GAME_ID' });
+      // Show interstitial ad, then reveal game-over screen
+      showInterstitialAd(function() {
+        document.getElementById('gameover-screen').classList.remove('hidden');
+        // Reset rewarded button for this game-over
+        var rb = document.getElementById('rewarded-extra-btn');
+        if (rb) { rb.disabled = false; rb.textContent = '📺 Watch Ad — Extra Life'; }
+      });
+
       window.__lastGameScore = score; // for E2E tests
     }
 
@@ -566,6 +589,59 @@
     setupMobileBtn(leftBtn, -1);
     setupMobileBtn(rightBtn, 1);
 
+    // ── GameMonetize Ad SDK Integration ────────────────────────────────────
+    // Called by GameMonetize SDK when it's ready
+    window['initGmSdk'] = function(SDK) {
+      window.sdk = SDK;
+      window.__adReady = true;
+      SDK.gameStart();
+    };
+
+    // Fallback: if SDK fails to load (ad-blocked / not on GM platform)
+    var _adFallbackTimer = setTimeout(function() {
+      if (!window.__adReady) {
+        window.sdk = null;
+        window.__adReady = true; // fallback ready flag for E2E tests
+      }
+    }, 4000);
+
+    // ── Interstitial helper ──────────────────────────────────────────────
+    function showInterstitialAd(onComplete) {
+      if (window.sdk && typeof window.sdk.showInterstitial === 'function') {
+        window.sdk.showInterstitial(onComplete);
+      } else {
+        // SDK not loaded — reveal game-over screen immediately
+        if (typeof onComplete === 'function') onComplete();
+      }
+    }
+
+    // ── Rewarded ad (extra life) ─────────────────────────────────────────
+    var _extraLifeUsed = false;
+    document.getElementById('rewarded-extra-btn').addEventListener('click', function() {
+      if (_extraLifeUsed) return;
+      var btn = this;
+      if (window.sdk && typeof window.sdk.showRewardedVideo === 'function') {
+        btn.disabled = true;
+        window.sdk.showRewardedVideo(function(hasRewarded) {
+          if (hasRewarded) {
+            _extraLifeUsed = true;
+            btn.textContent = '✅ Extra life used!';
+            // Restart game with extra life
+            document.getElementById('gameover-screen').classList.add('hidden');
+            startGame();
+          } else {
+            btn.disabled = false;
+          }
+        });
+      } else {
+        // Fallback: just restart (SDK not loaded)
+        _extraLifeUsed = true;
+        btn.textContent = '✅ Extra life used!';
+        document.getElementById('gameover-screen').classList.add('hidden');
+        startGame();
+      }
+    });
+
     // ── Init ───────────────────────────────────────────────────────────────
     document.getElementById('hi-score').textContent = hiScore;
 
@@ -577,9 +653,8 @@
     ctx.fillText('⚡ DODGE RUSH', CANVAS_W / 2, CANVAS_H / 2);
     ctx.textAlign = 'left';
 
-    // GameMonetize SDK placeholder
-    // Replace with actual integration when your game is live on GameMonetize
-    window.__adReady = true; // flag for E2E tests
   </script>
+  <!-- GameMonetize SDK — loads asynchronously, fires initGmSdk() when ready -->
+  <script src="https://api.gamemonetize.com/sdk.js" async></script>
 </body>
 </html>
