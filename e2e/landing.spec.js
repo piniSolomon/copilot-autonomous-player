@@ -23,7 +23,7 @@ test.describe('Landing Page', () => {
 
   test('shows fifteen game cards', async ({ page }) => {
     const cards = page.locator('.game-card');
-    await expect(cards).toHaveCount(15);
+    await expect(cards).toHaveCount(16);
   });
 
   test('Cookie Kingdom card links to correct page', async ({ page }) => {
@@ -158,7 +158,7 @@ test.describe('Landing Page', () => {
     await page.reload();
     // Both game cards should still be visible
     const cards = page.locator('.game-card');
-    await expect(cards).toHaveCount(15);
+    await expect(cards).toHaveCount(16);
     for (const card of await cards.all()) {
       await expect(card).toBeVisible();
       const box = await card.boundingBox();
