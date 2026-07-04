@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0e27" />
+  <title>EmojiFlick — Daily Pop Culture Emoji Puzzle</title>
+  <meta name="description" content="Decode a movie, TV show, or song title from emoji clues in today's daily EmojiFlick challenge." />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0a0e27;
+      --bg-soft: #11173b;
+      --panel: rgba(18, 24, 58, 0.96);
+      --panel-2: rgba(28, 35, 74, 0.92);
+      --line: rgba(142, 158, 255, 0.16);
+      --line-strong: rgba(157, 174, 255, 0.34);
+      --text: #f7f8ff;
+      --muted: #a4b0e9;
+      --accent: #7c9cff;
+      --accent-2: #65f2dc;
+      --danger: #ff708f;
+      --success: #7df29a;
+      --gold: #ffd76c;
+      --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+      --radius: 24px;
+      --emoji-size: clamp(3rem, 9vw, 4rem);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 15% 0%, rgba(101, 242, 220, 0.18), transparent 28%),
+        radial-gradient(circle at 85% 12%, rgba(124, 156, 255, 0.18), transparent 26%),
+        linear-gradient(180deg, var(--bg) 0%, #070b1f 100%);
+      color: var(--text);
+      padding: 18px 14px calc(24px + env(safe-area-inset-bottom));
+      display: flex;
+      justify-content: center;
+    }
+
+    body.modal-open { overflow: hidden; }
+    button, input { font: inherit; }
+    a { color: var(--accent-2); }
+
+    .page-shell {
+      width: min(100%, 780px);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .topbar, .card, .modal-card, .mini-stat, .history-item, .hint-strip, .ad-card {
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .back-link {
+      text-decoration: none;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      color: var(--accent-2);
+    }
+
+    .back-link:hover,
+    .back-link:focus-visible { text-decoration: underline; }
+
+    .icon-btn, .primary-btn, .secondary-btn, .modal-btn {
+      border: 0;
+      border-radius: 16px;
+      color: var(--text);
+      cursor: pointer;
+      transition: transform 140ms ease, filter 140ms ease, background 140ms ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .icon-btn:hover, .primary-btn:hover, .secondary-btn:hover, .modal-btn:hover { filter: brightness(1.06); }
+    .icon-btn:active, .primary-btn:active, .secondary-btn:active, .modal-btn:active { transform: scale(0.97); }
+
+    .icon-btn {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 1.1rem;
+    }
+
+    .card {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(15, 21, 52, 0.97), rgba(9, 13, 34, 0.97));
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(135deg, rgba(101, 242, 220, 0.04), transparent 32%, rgba(124, 156, 255, 0.06));
+    }
+
+    .hero {
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(2.1rem, 6vw, 3rem);
+      line-height: 1;
+      letter-spacing: 0.04em;
+      font-weight: 900;
+      background: linear-gradient(135deg, #ffffff 15%, var(--accent-2) 44%, #b6c2ff 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero p {
+      margin: 8px auto 0;
+      max-width: 48ch;
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .mini-stat {
+      padding: 12px;
+      background: var(--panel-2);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      min-height: 74px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 4px;
+      text-align: center;
+    }
+
+    .mini-stat span {
+      color: var(--muted);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .mini-stat strong {
+      font-size: 1rem;
+      font-weight: 800;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .emoji-panel {
+      position: relative;
+      z-index: 1;
+      background: linear-gradient(180deg, rgba(12, 17, 42, 0.86), rgba(18, 25, 58, 0.9));
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 18px 14px;
+      text-align: center;
+    }
+
+    .emoji-display {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      min-height: calc(var(--emoji-size) + 8px);
+    }
+
+    .emoji-token {
+      font-size: var(--emoji-size);
+      line-height: 1;
+      filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.28));
+      transform: translateY(0);
+      animation: float-in 480ms ease both;
+    }
+
+    .emoji-token:nth-child(2) { animation-delay: 60ms; }
+    .emoji-token:nth-child(3) { animation-delay: 120ms; }
+    .emoji-token:nth-child(4) { animation-delay: 180ms; }
+    .emoji-token:nth-child(5) { animation-delay: 240ms; }
+    .emoji-token:nth-child(6) { animation-delay: 300ms; }
+
+    @keyframes float-in {
+      from { opacity: 0; transform: translateY(12px) scale(0.9); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .hint-panel, .history-panel, .result-panel, .ad-card {
+      position: relative;
+      z-index: 1;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 22px;
+      padding: 14px;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .section-head h2, .section-head span {
+      margin: 0;
+      font-size: 0.95rem;
+      color: var(--text);
+      font-weight: 800;
+    }
+
+    .section-head small {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .hint-strip {
+      min-height: 62px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      background: rgba(8, 12, 30, 0.56);
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 12px;
+    }
+
+    .hint-letter, .hint-separator {
+      min-width: 32px;
+      height: 38px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 1rem;
+    }
+
+    .hint-letter {
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.05);
+      color: transparent;
+      text-shadow: none;
+    }
+
+    .hint-letter.revealed {
+      color: var(--gold);
+      background: rgba(255, 215, 108, 0.14);
+      border-color: rgba(255, 215, 108, 0.45);
+      animation: hint-pop 420ms ease;
+    }
+
+    .hint-letter.hidden::before {
+      content: "•";
+      color: rgba(255, 255, 255, 0.22);
+      font-size: 1.25rem;
+    }
+
+    .hint-separator {
+      min-width: 18px;
+      color: rgba(255, 255, 255, 0.48);
+      border-bottom: 2px solid rgba(255, 255, 255, 0.12);
+      border-radius: 0;
+    }
+
+    @keyframes hint-pop {
+      0% { transform: translateY(10px) scale(0.75); opacity: 0; }
+      65% { transform: translateY(-3px) scale(1.06); opacity: 1; }
+      100% { transform: translateY(0) scale(1); }
+    }
+
+    .form-shell {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .form-shell label {
+      font-size: 0.92rem;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .guess-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .guess-row input {
+      flex: 1;
+      min-width: 0;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(10, 14, 32, 0.84);
+      color: var(--text);
+      padding: 14px 16px;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .guess-row input:focus {
+      border-color: rgba(101, 242, 220, 0.45);
+      box-shadow: 0 0 0 4px rgba(101, 242, 220, 0.12);
+    }
+
+    .primary-btn, .secondary-btn, .modal-btn {
+      padding: 14px 16px;
+      font-weight: 800;
+      border: 1px solid transparent;
+    }
+
+    .primary-btn {
+      background: linear-gradient(135deg, var(--accent) 0%, #6787ff 100%);
+      min-width: 112px;
+    }
+
+    .secondary-btn, .modal-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .message {
+      min-height: 24px;
+      color: var(--muted);
+      font-weight: 700;
+      position: relative;
+      z-index: 1;
+    }
+
+    .message.error { color: #ff9ab0; }
+    .message.success { color: var(--success); }
+
+    .history-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(9, 13, 33, 0.58);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .history-item strong {
+      font-size: 0.98rem;
+      overflow-wrap: anywhere;
+    }
+
+    .history-item span {
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+      white-space: nowrap;
+      align-self: center;
+    }
+
+    .history-item.correct {
+      border-color: rgba(125, 242, 154, 0.42);
+      background: rgba(125, 242, 154, 0.12);
+    }
+
+    .empty-state {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin: 0;
+    }
+
+    .result-panel {
+      display: none;
+      text-align: center;
+    }
+
+    .result-panel.show { display: block; }
+
+    .result-title {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 900;
+    }
+
+    .star-rating {
+      margin-top: 8px;
+      font-size: 1.55rem;
+      letter-spacing: 0.18em;
+      color: var(--gold);
+      min-height: 30px;
+    }
+
+    .result-copy {
+      color: var(--muted);
+      margin: 10px auto 0;
+      max-width: 42ch;
+      line-height: 1.45;
+    }
+
+    .result-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .ad-card {
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .ad-card span {
+      display: block;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 6px;
+    }
+
+    .footer-note {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.86rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .confetti {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      top: -10%;
+      width: 10px;
+      height: 18px;
+      border-radius: 4px;
+      opacity: 0;
+    }
+
+    .confetti.show .confetti-piece {
+      animation: confetti-fall var(--dur, 2200ms) linear forwards;
+      animation-delay: var(--delay, 0ms);
+    }
+
+    @keyframes confetti-fall {
+      0% { transform: translate3d(0, -30px, 0) rotate(0deg); opacity: 0; }
+      10% { opacity: 1; }
+      100% { transform: translate3d(var(--drift, 0), 110vh, 0) rotate(var(--rot, 720deg)); opacity: 0; }
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(4, 7, 18, 0.72);
+      z-index: 20;
+    }
+
+    .modal.show { display: flex; }
+
+    .modal-card {
+      width: min(100%, 520px);
+      background: linear-gradient(180deg, rgba(16, 22, 55, 0.98), rgba(10, 14, 33, 0.98));
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 26px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .modal-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .modal-top h2 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+
+    .modal-top p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .distribution {
+      margin-top: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .distribution-row {
+      display: grid;
+      grid-template-columns: 28px 1fr 32px;
+      gap: 10px;
+      align-items: center;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .distribution-track {
+      height: 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .distribution-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(135deg, var(--accent-2), var(--accent));
+      width: 0%;
+      transition: width 260ms ease;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 640px) {
+      .card { padding: 16px; border-radius: 26px; }
+      .status-grid { grid-template-columns: 1fr; }
+      .guess-row { flex-direction: column; }
+      .primary-btn { width: 100%; }
+      .result-actions { flex-direction: column; }
+      .result-actions button { width: 100%; }
+      .modal-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <div class="topbar">
+      <a class="back-link" href="../../index.html">← Back to Games</a>
+      <div class="top-actions">
+        <button id="statsButton" class="icon-btn" type="button" aria-label="View stats">📊</button>
+        <button id="soundToggle" class="icon-btn" type="button" aria-label="Toggle sound" aria-pressed="true">🔊</button>
+      </div>
+    </div>
+
+    <main class="card">
+      <div class="hero">
+        <h1>EmojiFlick</h1>
+        <p>Decode today’s movie, TV show, or song title from the emoji clue. Five guesses. More misses = more hints.</p>
+      </div>
+
+      <div class="status-grid">
+        <div class="mini-stat">
+          <span>Daily challenge</span>
+          <strong id="dayBadge">Day 1</strong>
+        </div>
+        <div class="mini-stat">
+          <span>Current streak</span>
+          <strong id="streakBadge">0</strong>
+        </div>
+        <div class="mini-stat">
+          <span>Guesses left</span>
+          <strong id="guessesLeftBadge">5</strong>
+        </div>
+      </div>
+
+      <div class="badge-row">
+        <div class="badge" id="categoryBadge" data-category="movie">🎬 Movie</div>
+        <div class="badge" id="starBadge">⭐⭐⭐⭐⭐ possible</div>
+      </div>
+
+      <section class="emoji-panel" aria-labelledby="emojiHeading">
+        <h2 id="emojiHeading" class="sr-only">Emoji clue</h2>
+        <div class="emoji-display" id="emojiDisplay" aria-live="polite"></div>
+      </section>
+
+      <section class="hint-panel" aria-labelledby="hintHeading">
+        <div class="section-head">
+          <h2 id="hintHeading">Hint trail</h2>
+          <small id="hintCountLabel">0 letters revealed</small>
+        </div>
+        <div class="hint-strip" id="hintLetters" aria-live="polite"></div>
+      </section>
+
+      <form class="form-shell" id="guessForm" autocomplete="off">
+        <label for="guessInput">Your guess</label>
+        <div class="guess-row">
+          <input id="guessInput" name="guess" type="text" maxlength="80" placeholder="Type the movie, TV show, or song title" spellcheck="false" autocomplete="off" />
+          <button id="submitGuess" class="primary-btn" type="submit">Submit</button>
+        </div>
+      </form>
+
+      <div id="message" class="message" role="status" aria-live="polite">You get 5 guesses. Each miss reveals one more letter.</div>
+
+      <section class="history-panel" aria-labelledby="historyHeading">
+        <div class="section-head">
+          <h2 id="historyHeading">Guess history</h2>
+          <small id="remainingLabel">5 guesses left</small>
+        </div>
+        <ol id="guessHistory" class="history-list"></ol>
+      </section>
+
+      <section id="resultPanel" class="result-panel" aria-live="polite">
+        <h2 id="resultTitle" class="result-title"></h2>
+        <div id="starRating" class="star-rating"></div>
+        <p id="resultCopy" class="result-copy"></p>
+        <div class="result-actions">
+          <button id="shareButton" class="primary-btn" type="button">Share Result</button>
+          <button id="copyButton" class="secondary-btn" type="button">Copy to Clipboard</button>
+        </div>
+      </section>
+
+      <section class="ad-card" aria-label="Advertising status">
+        <span>GameMonetize</span>
+        <div id="adStatus">Loading ad support…</div>
+      </section>
+
+      <p class="footer-note">Daily puzzle · Progress saved locally · <a href="../../index.html">← Back to Games</a></p>
+      <div id="confetti" class="confetti" aria-hidden="true"></div>
+    </main>
+  </div>
+
+  <div id="statsModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="statsTitle">
+    <div class="modal-card">
+      <div class="modal-top">
+        <div>
+          <h2 id="statsTitle">EmojiFlick Stats</h2>
+          <p>Track your daily run, streak, and guess distribution.</p>
+        </div>
+        <button id="closeStats" class="icon-btn" type="button" aria-label="Close stats">✕</button>
+      </div>
+      <div class="modal-grid">
+        <div class="mini-stat">
+          <span>Played</span>
+          <strong id="statsPlayed">0</strong>
+        </div>
+        <div class="mini-stat">
+          <span>Wins</span>
+          <strong id="statsWins">0</strong>
+        </div>
+        <div class="mini-stat">
+          <span>Streak</span>
+          <strong id="statsStreak">0</strong>
+        </div>
+        <div class="mini-stat">
+          <span>Best streak</span>
+          <strong id="statsMaxStreak">0</strong>
+        </div>
+      </div>
+      <div class="distribution" id="distributionChart"></div>
+      <div style="display:flex; justify-content:flex-end; margin-top:18px;">
+        <button id="closeStatsFooter" class="modal-btn" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.SDK_OPTIONS = {
+      gameId: 'ef_emoji_flick_01',
+      onEvent: function (event) {
+        if (event && (event.name === 'SDK_READY' || event.type === 'SDK_READY')) {
+          window.__adReady = true;
+          if (window.__emojiFlickSetAdStatus) {
+            window.__emojiFlickSetAdStatus('GameMonetize SDK ready.');
+          }
+        }
+      }
+    };
+  </script>
+  <script>
+    (function () {
+      'use strict';
+
+      var PUZZLES = [{"answer":"The Lion King","category":"movie","tokens":["🦁","👑","🌅","🎶"],"emoji":"🦁👑🌅🎶","hints":["T","h","e"," ","L","i","o","n"," ","K","i","n","g"]},{"answer":"Finding Nemo","category":"movie","tokens":["🐠","🔍","🌊","🪸"],"emoji":"🐠🔍🌊🪸","hints":["F","i","n","d","i","n","g"," ","N","e","m","o"]},{"answer":"Frozen","category":"movie","tokens":["❄️","👸","⛄","🎵"],"emoji":"❄️👸⛄🎵","hints":["F","r","o","z","e","n"]},{"answer":"Star Wars","category":"movie","tokens":["⭐","⚔️","🚀","👽"],"aliases":["sw"],"emoji":"⭐⚔️🚀👽","hints":["S","t","a","r"," ","W","a","r","s"]},{"answer":"Titanic","category":"movie","tokens":["🚢","❄️","💑","🌊"],"emoji":"🚢❄️💑🌊","hints":["T","i","t","a","n","i","c"]},{"answer":"Jaws","category":"movie","tokens":["🦈","🌊","😱","🚤"],"emoji":"🦈🌊😱🚤","hints":["J","a","w","s"]},{"answer":"Toy Story","category":"movie","tokens":["🤠","🧸","🚀","🪀"],"emoji":"🤠🧸🚀🪀","hints":["T","o","y"," ","S","t","o","r","y"]},{"answer":"Jurassic Park","category":"movie","tokens":["🦖","🏞️","🚙","🧬"],"emoji":"🦖🏞️🚙🧬","hints":["J","u","r","a","s","s","i","c"," ","P","a","r","k"]},{"answer":"The Matrix","category":"movie","tokens":["💊","🕶️","💻","🔫"],"emoji":"💊🕶️💻🔫","hints":["T","h","e"," ","M","a","t","r","i","x"]},{"answer":"Home Alone","category":"movie","tokens":["🏠","👦","🎄","😱"],"emoji":"🏠👦🎄😱","hints":["H","o","m","e"," ","A","l","o","n","e"]},{"answer":"The Godfather","category":"movie","tokens":["🤵","🍝","🔫","👨‍👩‍👦"],"emoji":"🤵🍝🔫👨‍👩‍👦","hints":["T","h","e"," ","G","o","d","f","a","t","h","e","r"]},{"answer":"Ghostbusters","category":"movie","tokens":["👻","🚫","🚗","🔊"],"emoji":"👻🚫🚗🔊","hints":["G","h","o","s","t","b","u","s","t","e","r","s"]},{"answer":"Back to the Future","category":"movie","tokens":["⏰","🚗","⚡","🕶️"],"aliases":["bttf"],"emoji":"⏰🚗⚡🕶️","hints":["B","a","c","k"," ","t","o"," ","t","h","e"," ","F","u","t","u","r","e"]},{"answer":"Black Panther","category":"movie","tokens":["🐈‍⬛","👑","🖤","⚔️"],"emoji":"🐈‍⬛👑🖤⚔️","hints":["B","l","a","c","k"," ","P","a","n","t","h","e","r"]},{"answer":"Avatar","category":"movie","tokens":["🌍","🔵","🌿","🏹"],"emoji":"🌍🔵🌿🏹","hints":["A","v","a","t","a","r"]},{"answer":"Shrek","category":"movie","tokens":["🧌","🏰","🐴","💚"],"emoji":"🧌🏰🐴💚","hints":["S","h","r","e","k"]},{"answer":"The Avengers","category":"movie","tokens":["🦸","🛡️","⚡","💥"],"emoji":"🦸🛡️⚡💥","hints":["T","h","e"," ","A","v","e","n","g","e","r","s"]},{"answer":"Spider-Man","category":"movie","tokens":["🕷️","🧑","🏙️","🕸️"],"emoji":"🕷️🧑🏙️🕸️","hints":["S","p","i","d","e","r","-","M","a","n"]},{"answer":"Iron Man","category":"movie","tokens":["🦾","🧑","🔴","🛠️"],"emoji":"🦾🧑🔴🛠️","hints":["I","r","o","n"," ","M","a","n"]},{"answer":"Captain America","category":"movie","tokens":["🛡️","🇺🇸","🦸","⭐"],"emoji":"🛡️🇺🇸🦸⭐","hints":["C","a","p","t","a","i","n"," ","A","m","e","r","i","c","a"]},{"answer":"Thor","category":"movie","tokens":["⚡","🔨","👱","🌩️"],"emoji":"⚡🔨👱🌩️","hints":["T","h","o","r"]},{"answer":"Guardians of the Galaxy","category":"movie","tokens":["🚀","🌌","🦝","🎧"],"aliases":["gotg"],"emoji":"🚀🌌🦝🎧","hints":["G","u","a","r","d","i","a","n","s"," ","o","f"," ","t","h","e"," ","G","a","l","a","x","y"]},{"answer":"The Dark Knight","category":"movie","tokens":["🦇","🌃","♞","🃏"],"emoji":"🦇🌃♞🃏","hints":["T","h","e"," ","D","a","r","k"," ","K","n","i","g","h","t"]},{"answer":"Harry Potter","category":"movie","tokens":["⚡","🧙","🪄","🏰"],"emoji":"⚡🧙🪄🏰","hints":["H","a","r","r","y"," ","P","o","t","t","e","r"]},{"answer":"The Incredibles","category":"movie","tokens":["👨‍👩‍👧‍👦","🦸","🔥","⚡"],"emoji":"👨‍👩‍👧‍👦🦸🔥⚡","hints":["T","h","e"," ","I","n","c","r","e","d","i","b","l","e","s"]},{"answer":"Moana","category":"movie","tokens":["🌊","🛶","🌺","🐓"],"emoji":"🌊🛶🌺🐓","hints":["M","o","a","n","a"]},{"answer":"Up","category":"movie","tokens":["🎈","🏠","👴","🌤️"],"emoji":"🎈🏠👴🌤️","hints":["U","p"]},{"answer":"Coco","category":"movie","tokens":["💀","🎸","🌼","👵"],"emoji":"💀🎸🌼👵","hints":["C","o","c","o"]},{"answer":"Encanto","category":"movie","tokens":["🏠","✨","🌸","🕯️"],"emoji":"🏠✨🌸🕯️","hints":["E","n","c","a","n","t","o"]},{"answer":"Inside Out","category":"movie","tokens":["😀","😡","😢","🧠"],"emoji":"😀😡😢🧠","hints":["I","n","s","i","d","e"," ","O","u","t"]},{"answer":"Ratatouille","category":"movie","tokens":["🐀","🍲","👨‍🍳","🇫🇷"],"emoji":"🐀🍲👨‍🍳🇫🇷","hints":["R","a","t","a","t","o","u","i","l","l","e"]},{"answer":"The Little Mermaid","category":"movie","tokens":["🧜‍♀️","🦀","🎤","🌊"],"emoji":"🧜‍♀️🦀🎤🌊","hints":["T","h","e"," ","L","i","t","t","l","e"," ","M","e","r","m","a","i","d"]},{"answer":"Beauty and the Beast","category":"movie","tokens":["🌹","👸","🦁","🏰"],"emoji":"🌹👸🦁🏰","hints":["B","e","a","u","t","y"," ","a","n","d"," ","t","h","e"," ","B","e","a","s","t"]},{"answer":"Aladdin","category":"movie","tokens":["🧞","🪔","🕌","🐒"],"emoji":"🧞🪔🕌🐒","hints":["A","l","a","d","d","i","n"]},{"answer":"Mulan","category":"movie","tokens":["🗡️","🌸","🐉","🎖️"],"emoji":"🗡️🌸🐉🎖️","hints":["M","u","l","a","n"]},{"answer":"The Princess Bride","category":"movie","tokens":["👸","💍","⚔️","❤️"],"emoji":"👸💍⚔️❤️","hints":["T","h","e"," ","P","r","i","n","c","e","s","s"," ","B","r","i","d","e"]},{"answer":"E.T.","category":"movie","tokens":["👽","🚲","🌕","📞"],"emoji":"👽🚲🌕📞","hints":["E",".","T","."]},{"answer":"King Kong","category":"movie","tokens":["🦍","🏙️","🗽","💥"],"emoji":"🦍🏙️🗽💥","hints":["K","i","n","g"," ","K","o","n","g"]},{"answer":"The Wizard of Oz","category":"movie","tokens":["🌪️","👠","🧙","🌈"],"emoji":"🌪️👠🧙🌈","hints":["T","h","e"," ","W","i","z","a","r","d"," ","o","f"," ","O","z"]},{"answer":"Rocky","category":"movie","tokens":["🥊","🏃","🥇","🗽"],"emoji":"🥊🏃🥇🗽","hints":["R","o","c","k","y"]},{"answer":"The Terminator","category":"movie","tokens":["🤖","🔫","🕶️","🔥"],"emoji":"🤖🔫🕶️🔥","hints":["T","h","e"," ","T","e","r","m","i","n","a","t","o","r"]},{"answer":"Die Hard","category":"movie","tokens":["🏢","💥","👮","🎄"],"emoji":"🏢💥👮🎄","hints":["D","i","e"," ","H","a","r","d"]},{"answer":"Mad Max","category":"movie","tokens":["🚗","🔥","🏜️","⚙️"],"emoji":"🚗🔥🏜️⚙️","hints":["M","a","d"," ","M","a","x"]},{"answer":"Top Gun","category":"movie","tokens":["✈️","🕶️","🔥","🏆"],"emoji":"✈️🕶️🔥🏆","hints":["T","o","p"," ","G","u","n"]},{"answer":"The Notebook","category":"movie","tokens":["📓","❤️","🌧️","🦢"],"emoji":"📓❤️🌧️🦢","hints":["T","h","e"," ","N","o","t","e","b","o","o","k"]},{"answer":"The Sound of Music","category":"movie","tokens":["🎶","⛰️","👨‍👩‍👧‍👦","🎻"],"emoji":"🎶⛰️👨‍👩‍👧‍👦🎻","hints":["T","h","e"," ","S","o","u","n","d"," ","o","f"," ","M","u","s","i","c"]},{"answer":"Casablanca","category":"movie","tokens":["🛩️","🍸","💔","🌍"],"emoji":"🛩️🍸💔🌍","hints":["C","a","s","a","b","l","a","n","c","a"]},{"answer":"Pirates of the Caribbean","category":"movie","tokens":["🏴‍☠️","🌊","🦜","🏝️"],"aliases":["potc"],"emoji":"🏴‍☠️🌊🦜🏝️","hints":["P","i","r","a","t","e","s"," ","o","f"," ","t","h","e"," ","C","a","r","i","b","b","e","a","n"]},{"answer":"La La Land","category":"movie","tokens":["🎹","🌃","💃","🌟"],"emoji":"🎹🌃💃🌟","hints":["L","a"," ","L","a"," ","L","a","n","d"]},{"answer":"The Hunger Games","category":"movie","tokens":["🏹","🔥","🎯","🏟️"],"emoji":"🏹🔥🎯🏟️","hints":["T","h","e"," ","H","u","n","g","e","r"," ","G","a","m","e","s"]},{"answer":"Breaking Bad","category":"tv","tokens":["🧪","💊","🚐","💵"],"aliases":["bb"],"emoji":"🧪💊🚐💵","hints":["B","r","e","a","k","i","n","g"," ","B","a","d"]},{"answer":"Game of Thrones","category":"tv","tokens":["🐉","⚔️","👑","🧊"],"aliases":["got"],"emoji":"🐉⚔️👑🧊","hints":["G","a","m","e"," ","o","f"," ","T","h","r","o","n","e","s"]},{"answer":"Friends","category":"tv","tokens":["👫","☕","🏙️","😂"],"emoji":"👫☕🏙️😂","hints":["F","r","i","e","n","d","s"]},{"answer":"Stranger Things","category":"tv","tokens":["🔦","👻","🚲","🧇"],"emoji":"🔦👻🚲🧇","hints":["S","t","r","a","n","g","e","r"," ","T","h","i","n","g","s"]},{"answer":"The Office","category":"tv","tokens":["🖨️","🏢","☕","😂"],"emoji":"🖨️🏢☕😂","hints":["T","h","e"," ","O","f","f","i","c","e"]},{"answer":"The Simpsons","category":"tv","tokens":["🍩","👨‍👩‍👧‍👦","🟨","📺"],"emoji":"🍩👨‍👩‍👧‍👦🟨📺","hints":["T","h","e"," ","S","i","m","p","s","o","n","s"]},{"answer":"The Mandalorian","category":"tv","tokens":["👶","🚀","🪐","🛡️"],"emoji":"👶🚀🪐🛡️","hints":["T","h","e"," ","M","a","n","d","a","l","o","r","i","a","n"]},{"answer":"Wednesday","category":"tv","tokens":["🖤","🕷️","🩰","🔪"],"emoji":"🖤🕷️🩰🔪","hints":["W","e","d","n","e","s","d","a","y"]},{"answer":"Squid Game","category":"tv","tokens":["🦑","🎮","💰","🔺"],"emoji":"🦑🎮💰🔺","hints":["S","q","u","i","d"," ","G","a","m","e"]},{"answer":"The Crown","category":"tv","tokens":["👑","🇬🇧","🏰","📺"],"emoji":"👑🇬🇧🏰📺","hints":["T","h","e"," ","C","r","o","w","n"]},{"answer":"The Last of Us","category":"tv","tokens":["🍄","🧟","❤️","🛣️"],"emoji":"🍄🧟❤️🛣️","hints":["T","h","e"," ","L","a","s","t"," ","o","f"," ","U","s"]},{"answer":"Sherlock","category":"tv","tokens":["🔎","🧠","🎻","🧥"],"emoji":"🔎🧠🎻🧥","hints":["S","h","e","r","l","o","c","k"]},{"answer":"Loki","category":"tv","tokens":["🟢","🕰️","🌀","🗡️"],"emoji":"🟢🕰️🌀🗡️","hints":["L","o","k","i"]},{"answer":"The Boys","category":"tv","tokens":["🦸","🩸","💥","🤬"],"emoji":"🦸🩸💥🤬","hints":["T","h","e"," ","B","o","y","s"]},{"answer":"The Bear","category":"tv","tokens":["🐻","🍽️","👨‍🍳","🔥"],"emoji":"🐻🍽️👨‍🍳🔥","hints":["T","h","e"," ","B","e","a","r"]},{"answer":"Money Heist","category":"tv","tokens":["💶","🎭","🏦","🔫"],"emoji":"💶🎭🏦🔫","hints":["M","o","n","e","y"," ","H","e","i","s","t"]},{"answer":"Peaky Blinders","category":"tv","tokens":["🧢","🚬","🏙️","🔫"],"emoji":"🧢🚬🏙️🔫","hints":["P","e","a","k","y"," ","B","l","i","n","d","e","r","s"]},{"answer":"House of the Dragon","category":"tv","tokens":["🏠","🐉","🔥","👑"],"aliases":["hotd"],"emoji":"🏠🐉🔥👑","hints":["H","o","u","s","e"," ","o","f"," ","t","h","e"," ","D","r","a","g","o","n"]},{"answer":"The Walking Dead","category":"tv","tokens":["🧟","🚶","🩸","🌆"],"emoji":"🧟🚶🩸🌆","hints":["T","h","e"," ","W","a","l","k","i","n","g"," ","D","e","a","d"]},{"answer":"How I Met Your Mother","category":"tv","tokens":["☂️","🍍","❤️","👩"],"aliases":["himym"],"emoji":"☂️🍍❤️👩","hints":["H","o","w"," ","I"," ","M","e","t"," ","Y","o","u","r"," ","M","o","t","h","e","r"]},{"answer":"Brooklyn Nine-Nine","category":"tv","tokens":["👮","9️⃣","9️⃣","😂"],"aliases":["brooklyn 99","b99"],"emoji":"👮9️⃣9️⃣😂","hints":["B","r","o","o","k","l","y","n"," ","N","i","n","e","-","N","i","n","e"]},{"answer":"Parks and Recreation","category":"tv","tokens":["🌳","🏛️","📄","😄"],"aliases":["parks and rec"],"emoji":"🌳🏛️📄😄","hints":["P","a","r","k","s"," ","a","n","d"," ","R","e","c","r","e","a","t","i","o","n"]},{"answer":"Grey's Anatomy","category":"tv","tokens":["🩺","❤️","🏥","🩻"],"aliases":["greys anatomy"],"emoji":"🩺❤️🏥🩻","hints":["G","r","e","y","'","s"," ","A","n","a","t","o","m","y"]},{"answer":"The X-Files","category":"tv","tokens":["👽","🛸","📁","🔦"],"aliases":["x files"],"emoji":"👽🛸📁🔦","hints":["T","h","e"," ","X","-","F","i","l","e","s"]},{"answer":"Seinfeld","category":"tv","tokens":["🎤","🏙️","☕","😂"],"emoji":"🎤🏙️☕😂","hints":["S","e","i","n","f","e","l","d"]},{"answer":"Rick and Morty","category":"tv","tokens":["🧪","🛸","👴","🧑"],"emoji":"🧪🛸👴🧑","hints":["R","i","c","k"," ","a","n","d"," ","M","o","r","t","y"]},{"answer":"The Big Bang Theory","category":"tv","tokens":["⚛️","🛋️","😂","🚀"],"aliases":["big bang"],"emoji":"⚛️🛋️😂🚀","hints":["T","h","e"," ","B","i","g"," ","B","a","n","g"," ","T","h","e","o","r","y"]},{"answer":"The Witcher","category":"tv","tokens":["⚔️","🐺","🪙","🧙"],"emoji":"⚔️🐺🪙🧙","hints":["T","h","e"," ","W","i","t","c","h","e","r"]},{"answer":"Better Call Saul","category":"tv","tokens":["⚖️","📞","🕴️","💼"],"aliases":["bcs"],"emoji":"⚖️📞🕴️💼","hints":["B","e","t","t","e","r"," ","C","a","l","l"," ","S","a","u","l"]},{"answer":"Ted Lasso","category":"tv","tokens":["⚽","👨🏻‍🦰","😊","🏆"],"emoji":"⚽👨🏻‍🦰😊🏆","hints":["T","e","d"," ","L","a","s","s","o"]},{"answer":"Let It Go","category":"song","tokens":["❄️","🎤","🗣️","🌬️"],"emoji":"❄️🎤🗣️🌬️","hints":["L","e","t"," ","I","t"," ","G","o"]},{"answer":"Bohemian Rhapsody","category":"song","tokens":["👑","🎸","🎭","🎤"],"emoji":"👑🎸🎭🎤","hints":["B","o","h","e","m","i","a","n"," ","R","h","a","p","s","o","d","y"]},{"answer":"Shape of You","category":"song","tokens":["💃","❤️","🧩","🎶"],"emoji":"💃❤️🧩🎶","hints":["S","h","a","p","e"," ","o","f"," ","Y","o","u"]},{"answer":"Bad Guy","category":"song","tokens":["😈","🕶️","🎵","🚶"],"emoji":"😈🕶️🎵🚶","hints":["B","a","d"," ","G","u","y"]},{"answer":"Shake It Off","category":"song","tokens":["💃","🙅","🎶","✨"],"emoji":"💃🙅🎶✨","hints":["S","h","a","k","e"," ","I","t"," ","O","f","f"]},{"answer":"Rolling in the Deep","category":"song","tokens":["🌊","🎤","💔","🌑"],"emoji":"🌊🎤💔🌑","hints":["R","o","l","l","i","n","g"," ","i","n"," ","t","h","e"," ","D","e","e","p"]},{"answer":"Firework","category":"song","tokens":["🎆","🌌","🎶","✨"],"emoji":"🎆🌌🎶✨","hints":["F","i","r","e","w","o","r","k"]},{"answer":"Happy","category":"song","tokens":["😊","🕺","☀️","🎵"],"emoji":"😊🕺☀️🎵","hints":["H","a","p","p","y"]},{"answer":"Hello","category":"song","tokens":["👋","☎️","🎤","😢"],"emoji":"👋☎️🎤😢","hints":["H","e","l","l","o"]},{"answer":"Dancing Queen","category":"song","tokens":["💃","👑","🪩","🎶"],"emoji":"💃👑🪩🎶","hints":["D","a","n","c","i","n","g"," ","Q","u","e","e","n"]},{"answer":"Blinding Lights","category":"song","tokens":["🚗","🌃","✨","👀"],"emoji":"🚗🌃✨👀","hints":["B","l","i","n","d","i","n","g"," ","L","i","g","h","t","s"]},{"answer":"Old Town Road","category":"song","tokens":["🤠","🐎","🛣️","🎵"],"emoji":"🤠🐎🛣️🎵","hints":["O","l","d"," ","T","o","w","n"," ","R","o","a","d"]},{"answer":"Despacito","category":"song","tokens":["💃","🔥","❤️","🎶"],"emoji":"💃🔥❤️🎶","hints":["D","e","s","p","a","c","i","t","o"]},{"answer":"Thunder","category":"song","tokens":["⚡","🥁","🌩️","🎤"],"emoji":"⚡🥁🌩️🎤","hints":["T","h","u","n","d","e","r"]},{"answer":"Roar","category":"song","tokens":["🦁","🎤","💥","👑"],"emoji":"🦁🎤💥👑","hints":["R","o","a","r"]},{"answer":"Umbrella","category":"song","tokens":["☔","🌧️","❤️","🎵"],"emoji":"☔🌧️❤️🎵","hints":["U","m","b","r","e","l","l","a"]},{"answer":"Yellow Submarine","category":"song","tokens":["🟡","🚢","🌊","🎶"],"emoji":"🟡🚢🌊🎶","hints":["Y","e","l","l","o","w"," ","S","u","b","m","a","r","i","n","e"]},{"answer":"Sweet Caroline","category":"song","tokens":["🍬","👩","🎤","🎺"],"emoji":"🍬👩🎤🎺","hints":["S","w","e","e","t"," ","C","a","r","o","l","i","n","e"]},{"answer":"Someone Like You","category":"song","tokens":["😢","👤","❤️","🎶"],"emoji":"😢👤❤️🎶","hints":["S","o","m","e","o","n","e"," ","L","i","k","e"," ","Y","o","u"]},{"answer":"Take on Me","category":"song","tokens":["✋","❤️","🎤","🏃"],"emoji":"✋❤️🎤🏃","hints":["T","a","k","e"," ","o","n"," ","M","e"]}];
+      var STORAGE = {
+        stats: 'ef_stats',
+        streak: 'ef_streak',
+        sound: 'ef_sound'
+      };
+      var MAX_GUESSES = 5;
+      var DAY_MS = 24 * 60 * 60 * 1000;
+      var DAY_ZERO = Date.UTC(2026, 4, 24);
+      var CATEGORY_META = {
+        movie: { label: 'Movie', icon: '🎬' },
+        tv: { label: 'TV Show', icon: '📺' },
+        song: { label: 'Song', icon: '🎵' }
+      };
+
+      var elements = {
+        categoryBadge: document.getElementById('categoryBadge'),
+        copyButton: document.getElementById('copyButton'),
+        adStatus: document.getElementById('adStatus'),
+        confetti: document.getElementById('confetti'),
+        closeStats: document.getElementById('closeStats'),
+        closeStatsFooter: document.getElementById('closeStatsFooter'),
+        dayBadge: document.getElementById('dayBadge'),
+        distributionChart: document.getElementById('distributionChart'),
+        emojiDisplay: document.getElementById('emojiDisplay'),
+        guessForm: document.getElementById('guessForm'),
+        guessHistory: document.getElementById('guessHistory'),
+        guessInput: document.getElementById('guessInput'),
+        guessesLeftBadge: document.getElementById('guessesLeftBadge'),
+        hintCountLabel: document.getElementById('hintCountLabel'),
+        hintLetters: document.getElementById('hintLetters'),
+        message: document.getElementById('message'),
+        remainingLabel: document.getElementById('remainingLabel'),
+        resultCopy: document.getElementById('resultCopy'),
+        resultPanel: document.getElementById('resultPanel'),
+        resultTitle: document.getElementById('resultTitle'),
+        shareButton: document.getElementById('shareButton'),
+        soundToggle: document.getElementById('soundToggle'),
+        starBadge: document.getElementById('starBadge'),
+        starRating: document.getElementById('starRating'),
+        statsButton: document.getElementById('statsButton'),
+        statsModal: document.getElementById('statsModal'),
+        statsMaxStreak: document.getElementById('statsMaxStreak'),
+        statsPlayed: document.getElementById('statsPlayed'),
+        statsStreak: document.getElementById('statsStreak'),
+        statsWins: document.getElementById('statsWins'),
+        streakBadge: document.getElementById('streakBadge'),
+        submitGuess: document.getElementById('submitGuess')
+      };
+
+      var audioContext = null;
+      var state = {
+        dayNumber: 1,
+        puzzle: PUZZLES[0],
+        attempts: [],
+        hintProgress: 0,
+        status: 'playing',
+        stats: loadStats(),
+        soundOn: loadSoundPreference(),
+        progressKey: '',
+        progressRecorded: false,
+        confettiTimer: null,
+        shareButtonTimer: null,
+        copyButtonTimer: null,
+        lastMessageType: '',
+        overrideMode: false
+      };
+
+      function safeGet(key) {
+        try { return window.localStorage.getItem(key); } catch (error) { return null; }
+      }
+
+      function safeSet(key, value) {
+        try { window.localStorage.setItem(key, value); } catch (error) {}
+      }
+
+      function safeRemove(key) {
+        try { window.localStorage.removeItem(key); } catch (error) {}
+      }
+
+      function loadSoundPreference() {
+        return safeGet(STORAGE.sound) !== 'off';
+      }
+
+      function loadStats() {
+        var fallback = {
+          gamesPlayed: 0,
+          wins: 0,
+          losses: 0,
+          streak: 0,
+          maxStreak: 0,
+          lastPlayedDay: null,
+          lastWinDay: null,
+          distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+        };
+        var raw = safeGet(STORAGE.stats);
+        if (!raw) {
+          safeSet(STORAGE.streak, '0');
+          return fallback;
+        }
+        try {
+          var parsed = JSON.parse(raw);
+          parsed.distribution = parsed.distribution || fallback.distribution;
+          [1, 2, 3, 4, 5].forEach(function (guess) {
+            if (typeof parsed.distribution[guess] !== 'number') {
+              parsed.distribution[guess] = 0;
+            }
+          });
+          parsed.gamesPlayed = Number(parsed.gamesPlayed || 0);
+          parsed.wins = Number(parsed.wins || 0);
+          parsed.losses = Number(parsed.losses || 0);
+          parsed.streak = Number(parsed.streak || 0);
+          parsed.maxStreak = Number(parsed.maxStreak || 0);
+          safeSet(STORAGE.streak, String(parsed.streak));
+          return parsed;
+        } catch (error) {
+          safeSet(STORAGE.streak, '0');
+          return fallback;
+        }
+      }
+
+      function saveStats() {
+        safeSet(STORAGE.stats, JSON.stringify(state.stats));
+        safeSet(STORAGE.streak, String(state.stats.streak));
+      }
+
+      function getTodayUtcMidnight() {
+        var now = new Date();
+        return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+      }
+
+      function getDayNumber() {
+        var diff = Math.floor((getTodayUtcMidnight() - DAY_ZERO) / DAY_MS) + 1;
+        return diff > 0 ? diff : 1;
+      }
+
+      function getProgressKey(dayNumber) {
+        return 'ef_progress_' + dayNumber;
+      }
+
+      function createSeededIndex(dayNumber) {
+        return (dayNumber * 37 + 11) % PUZZLES.length;
+      }
+
+      function getDailyPuzzle(dayNumber) {
+        return PUZZLES[createSeededIndex(dayNumber)];
+      }
+
+      function normalizeText(input) {
+        return String(input || '')
+          .toLowerCase()
+          .replace(/&/g, ' and ')
+          .replace(/[^a-z0-9\s]/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+      }
+
+      function stripLeadingArticle(input) {
+        return input.replace(/^(the|a|an)\s+/, '').trim();
+      }
+
+      function normalizeAnswer(input) {
+        return stripLeadingArticle(normalizeText(input));
+      }
+
+      function buildInitialism(input) {
+        var clean = stripLeadingArticle(normalizeText(input));
+        if (!clean) {
+          return '';
+        }
+        return clean.split(' ').filter(Boolean).map(function (word) {
+          return word.charAt(0);
+        }).join('');
+      }
+
+      function getAcceptedAnswers(puzzle) {
+        var accepted = new Set();
+        accepted.add(normalizeAnswer(puzzle.answer));
+        accepted.add(buildInitialism(puzzle.answer));
+        if (Array.isArray(puzzle.aliases)) {
+          puzzle.aliases.forEach(function (alias) {
+            accepted.add(normalizeAnswer(alias));
+            accepted.add(buildInitialism(alias));
+          });
+        }
+        accepted.delete('');
+        return accepted;
+      }
+
+      function isCorrectGuess(guess) {
+        var accepted = getAcceptedAnswers(state.puzzle);
+        var normalized = normalizeAnswer(guess);
+        if (!normalized) {
+          return false;
+        }
+        return accepted.has(normalized) || accepted.has(buildInitialism(normalized));
+      }
+
+      function loadProgress() {
+        var raw = safeGet(state.progressKey);
+        if (!raw) {
+          state.attempts = [];
+          state.hintProgress = 0;
+          state.status = 'playing';
+          state.progressRecorded = false;
+          return;
+        }
+        try {
+          var parsed = JSON.parse(raw);
+          if (parsed.answer !== state.puzzle.answer) {
+            throw new Error('puzzle mismatch');
+          }
+          state.attempts = Array.isArray(parsed.attempts) ? parsed.attempts : [];
+          state.hintProgress = Number(parsed.hintProgress || 0);
+          state.status = parsed.status === 'win' || parsed.status === 'lose' ? parsed.status : 'playing';
+          state.progressRecorded = Boolean(parsed.progressRecorded);
+        } catch (error) {
+          state.attempts = [];
+          state.hintProgress = 0;
+          state.status = 'playing';
+          state.progressRecorded = false;
+        }
+      }
+
+      function saveProgress() {
+        safeSet(state.progressKey, JSON.stringify({
+          answer: state.puzzle.answer,
+          attempts: state.attempts,
+          hintProgress: state.hintProgress,
+          status: state.status,
+          progressRecorded: state.progressRecorded
+        }));
+      }
+
+      function countRevealableLetters(answer) {
+        return Array.from(answer).filter(function (char) {
+          return /[a-z0-9]/i.test(char);
+        }).length;
+      }
+
+      function isAutoVisibleChar(char) {
+        return !/[a-z0-9]/i.test(char);
+      }
+
+      function getRevealedIndexes() {
+        var indexes = [];
+        var revealCount = 0;
+        state.puzzle.hints.forEach(function (char, index) {
+          if (isAutoVisibleChar(char)) {
+            return;
+          }
+          if (revealCount < state.hintProgress) {
+            indexes.push(index);
+            revealCount += 1;
+          }
+        });
+        return indexes;
+      }
+
+      function starCountForGuesses(guessCount) {
+        if (!guessCount || guessCount < 1 || guessCount > MAX_GUESSES) {
+          return 0;
+        }
+        return MAX_GUESSES - guessCount + 1;
+      }
+
+      function starsForGuesses(guessCount) {
+        var count = starCountForGuesses(guessCount);
+        return count > 0 ? '⭐'.repeat(count) : '';
+      }
+
+      function getPotentialStars() {
+        var used = state.attempts.length;
+        var potential = Math.max(1, MAX_GUESSES - used);
+        return '⭐'.repeat(potential);
+      }
+
+      function pluralizeGuess(count) {
+        return count === 1 ? 'guess' : 'guesses';
+      }
+
+      function setMessage(text, type) {
+        state.lastMessageType = type || '';
+        elements.message.textContent = text;
+        elements.message.className = 'message' + (type ? ' ' + type : '');
+      }
+
+      function buildShareText() {
+        if (state.status === 'win') {
+          return '🎬 EmojiFlick Day ' + state.dayNumber + ': ' + state.puzzle.emoji + ' → ' + state.puzzle.answer + ' in ' + state.attempts.length + ' ' + pluralizeGuess(state.attempts.length) + '! ' + starsForGuesses(state.attempts.length) + ' 🎯';
+        }
+        if (state.status === 'lose') {
+          return '🎬 EmojiFlick Day ' + state.dayNumber + ': ' + state.puzzle.emoji + ' → ' + state.puzzle.answer + ' in 5 guesses. 💔';
+        }
+        return '🎬 EmojiFlick Day ' + state.dayNumber + ': ' + state.puzzle.emoji + ' — can you solve it?';
+      }
+
+      function updateShareButtons(button, text) {
+        if (button === elements.shareButton) {
+          if (state.shareButtonTimer) {
+            window.clearTimeout(state.shareButtonTimer);
+          }
+          button.textContent = text;
+          state.shareButtonTimer = window.setTimeout(function () {
+            button.textContent = 'Share Result';
+          }, 1600);
+          return;
+        }
+        if (state.copyButtonTimer) {
+          window.clearTimeout(state.copyButtonTimer);
+        }
+        button.textContent = text;
+        state.copyButtonTimer = window.setTimeout(function () {
+          button.textContent = 'Copy to Clipboard';
+        }, 1600);
+      }
+
+      function fallbackCopy(text) {
+        window.__lastShareText = text;
+        var input = document.createElement('textarea');
+        input.value = text;
+        input.setAttribute('readonly', 'readonly');
+        input.style.position = 'fixed';
+        input.style.opacity = '0';
+        input.style.left = '-9999px';
+        document.body.appendChild(input);
+        input.select();
+        var success = false;
+        try {
+          success = document.execCommand('copy');
+        } catch (error) {
+          success = false;
+        }
+        document.body.removeChild(input);
+        return success;
+      }
+
+      function copyShareText(button) {
+        var text = buildShareText();
+        window.__lastShareText = text;
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+          navigator.clipboard.writeText(text).then(function () {
+            updateShareButtons(button, '✅ Copied!');
+            setMessage('Result copied to clipboard.', 'success');
+          }).catch(function () {
+            var ok = fallbackCopy(text);
+            updateShareButtons(button, ok ? '✅ Copied!' : '⚠️ Try manual copy');
+            setMessage(ok ? 'Result copied to clipboard.' : 'Copy failed — share text is ready to select.', ok ? 'success' : 'error');
+          });
+          return;
+        }
+        var copied = fallbackCopy(text);
+        updateShareButtons(button, copied ? '✅ Copied!' : '⚠️ Try manual copy');
+        setMessage(copied ? 'Result copied to clipboard.' : 'Copy failed — share text is ready to select.', copied ? 'success' : 'error');
+      }
+
+      function shareResult() {
+        var text = buildShareText();
+        window.__lastShareText = text;
+        if (navigator.share) {
+          navigator.share({
+            title: 'EmojiFlick Day ' + state.dayNumber,
+            text: text,
+            url: window.location.href
+          }).then(function () {
+            updateShareButtons(elements.shareButton, '✅ Shared!');
+            setMessage('Result shared.', 'success');
+          }).catch(function () {
+            copyShareText(elements.shareButton);
+          });
+          return;
+        }
+        copyShareText(elements.shareButton);
+      }
+
+      function ensureAudio() {
+        if (!state.soundOn) {
+          return null;
+        }
+        if (!audioContext) {
+          var AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) {
+            return null;
+          }
+          audioContext = new AudioCtx();
+        }
+        if (audioContext.state === 'suspended') {
+          audioContext.resume().catch(function () {});
+        }
+        return audioContext;
+      }
+
+      function scheduleTone(ctx, options) {
+        if (!ctx) {
+          return;
+        }
+        var now = ctx.currentTime;
+        var start = now + (options.start || 0);
+        var end = start + (options.duration || 0.12);
+        var oscillator = ctx.createOscillator();
+        var gain = ctx.createGain();
+        oscillator.type = options.type || 'sine';
+        oscillator.frequency.setValueAtTime(options.frequency || 440, start);
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(options.volume || 0.05, start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, end);
+        oscillator.connect(gain);
+        gain.connect(ctx.destination);
+        oscillator.start(start);
+        oscillator.stop(end + 0.02);
+      }
+
+      function playWrongSound() {
+        var ctx = ensureAudio();
+        if (!ctx) {
+          return;
+        }
+        scheduleTone(ctx, { frequency: 170, type: 'sawtooth', duration: 0.16, volume: 0.04 });
+        scheduleTone(ctx, { frequency: 110, type: 'triangle', start: 0.08, duration: 0.18, volume: 0.03 });
+      }
+
+      function playCorrectSound() {
+        var ctx = ensureAudio();
+        if (!ctx) {
+          return;
+        }
+        [523.25, 659.25, 783.99].forEach(function (frequency, index) {
+          scheduleTone(ctx, { frequency: frequency, start: index * 0.08, duration: 0.18, volume: 0.05, type: 'triangle' });
+        });
+      }
+
+      function playCelebrationSound() {
+        var ctx = ensureAudio();
+        if (!ctx) {
+          return;
+        }
+        [783.99, 880, 1046.5, 1318.5].forEach(function (frequency, index) {
+          scheduleTone(ctx, { frequency: frequency, start: index * 0.07, duration: 0.22, volume: 0.055, type: index % 2 === 0 ? 'triangle' : 'sine' });
+        });
+      }
+
+      function updateSoundButton() {
+        elements.soundToggle.textContent = state.soundOn ? '🔊' : '🔇';
+        elements.soundToggle.setAttribute('aria-pressed', state.soundOn ? 'true' : 'false');
+      }
+
+      function renderEmojiClue() {
+        elements.emojiDisplay.innerHTML = '';
+        state.puzzle.tokens.forEach(function (token) {
+          var span = document.createElement('span');
+          span.className = 'emoji-token';
+          span.textContent = token;
+          elements.emojiDisplay.appendChild(span);
+        });
+      }
+
+      function renderCategory() {
+        var meta = CATEGORY_META[state.puzzle.category] || CATEGORY_META.movie;
+        elements.categoryBadge.dataset.category = state.puzzle.category;
+        elements.categoryBadge.textContent = meta.icon + ' ' + meta.label;
+      }
+
+      function renderHints() {
+        var revealed = new Set(getRevealedIndexes());
+        elements.hintLetters.innerHTML = '';
+        state.puzzle.hints.forEach(function (char, index) {
+          var span = document.createElement('span');
+          if (char === ' ') {
+            span.className = 'hint-separator';
+            span.textContent = '';
+          } else if (isAutoVisibleChar(char)) {
+            span.className = 'hint-letter revealed';
+            span.textContent = char;
+          } else if (revealed.has(index) || state.status !== 'playing') {
+            span.className = 'hint-letter revealed';
+            span.textContent = char;
+          } else {
+            span.className = 'hint-letter hidden';
+            span.setAttribute('aria-hidden', 'true');
+            span.textContent = char;
+          }
+          elements.hintLetters.appendChild(span);
+        });
+        elements.hintCountLabel.textContent = state.hintProgress + (state.hintProgress === 1 ? ' letter revealed' : ' letters revealed');
+      }
+
+      function renderHistory() {
+        elements.guessHistory.innerHTML = '';
+        if (!state.attempts.length) {
+          var empty = document.createElement('p');
+          empty.className = 'empty-state';
+          empty.textContent = 'No guesses yet — trust your first instinct.';
+          elements.guessHistory.appendChild(empty);
+          return;
+        }
+        state.attempts.forEach(function (attempt, index) {
+          var item = document.createElement('li');
+          item.className = 'history-item' + (attempt.correct ? ' correct' : '');
+          var guess = document.createElement('strong');
+          guess.textContent = attempt.guess;
+          var meta = document.createElement('span');
+          meta.textContent = attempt.correct ? 'Solved on #' + (index + 1) : 'Miss #' + (index + 1);
+          item.appendChild(guess);
+          item.appendChild(meta);
+          elements.guessHistory.appendChild(item);
+        });
+      }
+
+      function renderResult() {
+        var finished = state.status === 'win' || state.status === 'lose';
+        elements.resultPanel.classList.toggle('show', finished);
+        if (!finished) {
+          return;
+        }
+        if (state.status === 'win') {
+          elements.resultTitle.textContent = 'You nailed it — ' + state.puzzle.answer + '!';
+          elements.starRating.textContent = starsForGuesses(state.attempts.length);
+          elements.resultCopy.textContent = 'Solved in ' + state.attempts.length + ' ' + pluralizeGuess(state.attempts.length) + '. Come back tomorrow for a fresh clue.';
+        } else {
+          elements.resultTitle.textContent = 'Out of guesses — the answer was ' + state.puzzle.answer + '.';
+          elements.starRating.textContent = '💔';
+          elements.resultCopy.textContent = 'You used all 5 guesses. Your streak resets, but the next daily puzzle is only a day away.';
+        }
+      }
+
+      function renderBadges() {
+        elements.dayBadge.textContent = 'Day ' + state.dayNumber;
+        elements.streakBadge.textContent = String(state.stats.streak || 0);
+        var guessesLeft = Math.max(0, MAX_GUESSES - state.attempts.length);
+        elements.guessesLeftBadge.textContent = String(guessesLeft);
+        elements.remainingLabel.textContent = guessesLeft + ' ' + (guessesLeft === 1 ? 'guess' : 'guesses') + ' left';
+        if (state.status === 'win') {
+          elements.starBadge.textContent = starsForGuesses(state.attempts.length);
+        } else if (state.status === 'lose') {
+          elements.starBadge.textContent = 'No stars today';
+        } else {
+          elements.starBadge.textContent = getPotentialStars() + ' possible';
+        }
+      }
+
+      function renderStatsModal() {
+        elements.statsPlayed.textContent = String(state.stats.gamesPlayed || 0);
+        elements.statsWins.textContent = String(state.stats.wins || 0);
+        elements.statsStreak.textContent = String(state.stats.streak || 0);
+        elements.statsMaxStreak.textContent = String(state.stats.maxStreak || 0);
+        elements.distributionChart.innerHTML = '';
+        var counts = [1, 2, 3, 4, 5].map(function (guess) {
+          return Number(state.stats.distribution[guess] || 0);
+        });
+        var max = Math.max.apply(Math, [1].concat(counts));
+        [1, 2, 3, 4, 5].forEach(function (guess) {
+          var row = document.createElement('div');
+          row.className = 'distribution-row';
+          var label = document.createElement('span');
+          label.textContent = String(guess);
+          var track = document.createElement('div');
+          track.className = 'distribution-track';
+          var fill = document.createElement('div');
+          fill.className = 'distribution-fill';
+          fill.style.width = ((state.stats.distribution[guess] || 0) / max * 100) + '%';
+          track.appendChild(fill);
+          var value = document.createElement('span');
+          value.textContent = String(state.stats.distribution[guess] || 0);
+          row.appendChild(label);
+          row.appendChild(track);
+          row.appendChild(value);
+          elements.distributionChart.appendChild(row);
+        });
+      }
+
+      function renderInputState() {
+        var finished = state.status === 'win' || state.status === 'lose';
+        elements.guessInput.disabled = finished;
+        elements.submitGuess.disabled = finished;
+        elements.guessInput.setAttribute('aria-disabled', finished ? 'true' : 'false');
+      }
+
+      function renderAll() {
+        renderEmojiClue();
+        renderCategory();
+        renderHints();
+        renderHistory();
+        renderResult();
+        renderBadges();
+        renderStatsModal();
+        renderInputState();
+        updateSoundButton();
+      }
+
+      function buildConfetti() {
+        var colors = ['#65f2dc', '#ffd76c', '#ff708f', '#7c9cff', '#ffffff', '#8ef5a1'];
+        elements.confetti.innerHTML = '';
+        for (var i = 0; i < 36; i += 1) {
+          var piece = document.createElement('span');
+          piece.className = 'confetti-piece';
+          piece.style.left = Math.random() * 100 + '%';
+          piece.style.background = colors[i % colors.length];
+          piece.style.setProperty('--delay', Math.round(Math.random() * 240) + 'ms');
+          piece.style.setProperty('--dur', 1800 + Math.round(Math.random() * 1000) + 'ms');
+          piece.style.setProperty('--drift', Math.round((Math.random() - 0.5) * 220) + 'px');
+          piece.style.setProperty('--rot', Math.round((Math.random() * 2 + 1) * 360) + 'deg');
+          elements.confetti.appendChild(piece);
+        }
+      }
+
+      function launchConfetti() {
+        if (state.confettiTimer) {
+          window.clearTimeout(state.confettiTimer);
+        }
+        buildConfetti();
+        elements.confetti.classList.remove('show');
+        void elements.confetti.offsetWidth;
+        elements.confetti.classList.add('show');
+        state.confettiTimer = window.setTimeout(function () {
+          elements.confetti.classList.remove('show');
+        }, 2800);
+      }
+
+      function recordCompletedGame() {
+        if (state.progressRecorded) {
+          return;
+        }
+        state.stats.gamesPlayed += 1;
+        state.stats.lastPlayedDay = state.dayNumber;
+        if (state.status === 'win') {
+          state.stats.wins += 1;
+          state.stats.distribution[state.attempts.length] = Number(state.stats.distribution[state.attempts.length] || 0) + 1;
+          if (state.stats.lastWinDay === state.dayNumber - 1) {
+            state.stats.streak += 1;
+          } else {
+            state.stats.streak = 1;
+          }
+          state.stats.lastWinDay = state.dayNumber;
+          if (state.stats.streak > state.stats.maxStreak) {
+            state.stats.maxStreak = state.stats.streak;
+          }
+        } else {
+          state.stats.losses += 1;
+          state.stats.streak = 0;
+        }
+        state.progressRecorded = true;
+        saveStats();
+      }
+
+      function finishGame(status) {
+        state.status = status;
+        recordCompletedGame();
+        saveProgress();
+        renderAll();
+      }
+
+      function submitGuess(rawGuess) {
+        if (state.status !== 'playing') {
+          setMessage('Today’s challenge is already finished. Come back tomorrow!', 'error');
+          return;
+        }
+        var guess = String(rawGuess || '').trim();
+        if (!guess) {
+          setMessage('Type a title before submitting.', 'error');
+          return;
+        }
+        var correct = isCorrectGuess(guess);
+        state.attempts.push({ guess: guess, correct: correct });
+        if (correct) {
+          playCorrectSound();
+          playCelebrationSound();
+          finishGame('win');
+          launchConfetti();
+          setMessage('Correct! ' + state.puzzle.answer + ' was the answer.', 'success');
+        } else {
+          playWrongSound();
+          state.hintProgress = Math.min(countRevealableLetters(state.puzzle.answer), state.hintProgress + 1);
+          if (state.attempts.length >= MAX_GUESSES) {
+            finishGame('lose');
+            setMessage('Nope — that was your last guess.', 'error');
+          } else {
+            saveProgress();
+            renderAll();
+            setMessage('Not quite. One more hint letter is live.', 'error');
+          }
+        }
+        elements.guessForm.reset();
+        elements.guessInput.focus();
+      }
+
+      function openStats() {
+        elements.statsModal.classList.add('show');
+        document.body.classList.add('modal-open');
+      }
+
+      function closeStats() {
+        elements.statsModal.classList.remove('show');
+        document.body.classList.remove('modal-open');
+      }
+
+      function setAdStatus(text) {
+        elements.adStatus.textContent = text;
+      }
+
+      function mountGameMonetizeSdk() {
+        window.__adReady = false;
+        window.__emojiFlickSetAdStatus = setAdStatus;
+        var script = document.createElement('script');
+        script.id = 'gamemonetize-sdk';
+        script.src = 'https://api.gamemonetize.com/sdk.js';
+        script.async = true;
+        script.onerror = function () {
+          window.sdk = null;
+          window.__adReady = true;
+          setAdStatus('Ad SDK unavailable — fallback active.');
+        };
+        document.head.appendChild(script);
+        window.setTimeout(function () {
+          if (!window.__adReady) {
+            window.sdk = null;
+            window.__adReady = true;
+            setAdStatus('Ad SDK timed out after 5 seconds — puzzle continues ad-free.');
+          }
+        }, 5000);
+      }
+
+      window.initGmSdk = function (SDK) {
+        window.sdk = SDK || null;
+        window.__adReady = true;
+        setAdStatus('GameMonetize SDK ready.');
+      };
+
+      function resetForPuzzle(puzzle) {
+        state.puzzle = puzzle;
+        state.attempts = [];
+        state.hintProgress = 0;
+        state.status = 'playing';
+        state.progressRecorded = false;
+        elements.confetti.classList.remove('show');
+        setMessage('Puzzle reset. You get 5 guesses. Each miss reveals one more letter.', '');
+        saveProgress();
+        renderAll();
+      }
+
+      function initDailyState() {
+        state.dayNumber = getDayNumber();
+        state.progressKey = getProgressKey(state.dayNumber);
+        state.puzzle = getDailyPuzzle(state.dayNumber);
+        loadProgress();
+        renderAll();
+        if (state.status === 'win') {
+          setMessage('You already solved today’s EmojiFlick. Share it or check your stats.', 'success');
+        } else if (state.status === 'lose') {
+          setMessage('You already used all 5 guesses today. The answer was ' + state.puzzle.answer + '.', 'error');
+        }
+      }
+
+      elements.guessForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+        ensureAudio();
+        submitGuess(elements.guessInput.value);
+      });
+
+      elements.soundToggle.addEventListener('click', function () {
+        state.soundOn = !state.soundOn;
+        safeSet(STORAGE.sound, state.soundOn ? 'on' : 'off');
+        updateSoundButton();
+        if (state.soundOn) {
+          ensureAudio();
+          playCorrectSound();
+          setMessage('Sound is on.', 'success');
+        } else {
+          setMessage('Sound is muted.', '');
+        }
+      });
+
+      elements.shareButton.addEventListener('click', function () {
+        shareResult();
+      });
+
+      elements.copyButton.addEventListener('click', function () {
+        copyShareText(elements.copyButton);
+      });
+
+      elements.statsButton.addEventListener('click', openStats);
+      elements.closeStats.addEventListener('click', closeStats);
+      elements.closeStatsFooter.addEventListener('click', closeStats);
+      elements.statsModal.addEventListener('click', function (event) {
+        if (event.target === elements.statsModal) {
+          closeStats();
+        }
+      });
+
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && elements.statsModal.classList.contains('show')) {
+          closeStats();
+        }
+      });
+
+      initDailyState();
+      mountGameMonetizeSdk();
+      renderAll();
+      elements.guessInput.focus();
+
+      window.__emojiFlickDebug = {
+        getState: function () {
+          return {
+            dayNumber: state.dayNumber,
+            answer: state.puzzle.answer,
+            category: state.puzzle.category,
+            status: state.status,
+            attempts: state.attempts.slice(),
+            hintProgress: state.hintProgress,
+            shareText: buildShareText()
+          };
+        },
+        setPuzzleByAnswer: function (answer) {
+          var normalized = normalizeAnswer(answer);
+          var found = PUZZLES.find(function (puzzle) {
+            return normalizeAnswer(puzzle.answer) === normalized;
+          });
+          if (!found) {
+            throw new Error('Puzzle not found for ' + answer);
+          }
+          resetForPuzzle(found);
+          return found.answer;
+        },
+        clearProgress: function () {
+          safeRemove(state.progressKey);
+          state.attempts = [];
+          state.hintProgress = 0;
+          state.status = 'playing';
+          state.progressRecorded = false;
+          renderAll();
+        },
+        matchGuess: function (guess) {
+          return isCorrectGuess(guess);
+        }
+      };
+    })();
+  </script>
+</body>
+</html>
