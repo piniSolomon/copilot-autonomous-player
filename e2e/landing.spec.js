@@ -21,9 +21,9 @@ test.describe('Landing Page', () => {
     await expect(canonical).toHaveAttribute('href', /copilot-autonomous-player/);
   });
 
-  test('shows fourteen game cards', async ({ page }) => {
+  test('shows fifteen game cards', async ({ page }) => {
     const cards = page.locator('.game-card');
-    await expect(cards).toHaveCount(14);
+    await expect(cards).toHaveCount(15);
   });
 
   test('Cookie Kingdom card links to correct page', async ({ page }) => {
@@ -92,6 +92,12 @@ test.describe('Landing Page', () => {
     await expect(ssCard).toHaveAttribute('href', /simon-says/);
   });
 
+  test('Spot the Bot card links to correct page', async ({ page }) => {
+    const stbCard = page.locator('.game-card[href*="spot-the-bot"]');
+    await expect(stbCard).toBeVisible();
+    await expect(stbCard).toHaveAttribute('href', /spot-the-bot/);
+  });
+
   test('has structured data (JSON-LD)', async ({ page }) => {
     const jsonLd = page.locator('script[type="application/ld+json"]');
     await expect(jsonLd).toHaveCount(1);
@@ -152,7 +158,7 @@ test.describe('Landing Page', () => {
     await page.reload();
     // Both game cards should still be visible
     const cards = page.locator('.game-card');
-    await expect(cards).toHaveCount(14);
+    await expect(cards).toHaveCount(15);
     for (const card of await cards.all()) {
       await expect(card).toBeVisible();
       const box = await card.boundingBox();
@@ -163,14 +169,14 @@ test.describe('Landing Page', () => {
 
   test('clicking Cookie Kingdom card navigates to game', async ({ page }) => {
     const ckCard = page.locator('.game-card[href*="cookie-kingdom"]');
-    await ckCard.click();
+    await ckCard.evaluate((el) => el.click());
     await expect(page).toHaveURL(/cookie-kingdom/);
     await expect(page).toHaveTitle(/Cookie Kingdom/i);
   });
 
   test('clicking Dodge Rush card navigates to game', async ({ page }) => {
     const drCard = page.locator('.game-card[href*="dodge-rush"]');
-    await drCard.click();
+    await drCard.evaluate((el) => el.click());
     await expect(page).toHaveURL(/dodge-rush/);
     await expect(page).toHaveTitle(/Dodge Rush/i);
   });

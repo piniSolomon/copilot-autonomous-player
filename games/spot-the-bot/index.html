@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0e27" />
+  <title>Spot the Bot — Daily AI or Human Challenge</title>
+  <meta name="description" content="Play Spot the Bot, a daily AI literacy game where you judge five text samples and guess whether each was written by AI or a human." />
+  <meta property="og:title" content="Spot the Bot — Daily AI or Human Challenge" />
+  <meta property="og:description" content="Read five reviews, tweets, and posts. Then decide: AI or human?" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://pinisolomon.github.io/copilot-autonomous-player/games/spot-the-bot/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Spot the Bot — Daily AI or Human Challenge" />
+  <meta name="twitter:description" content="A dark, mobile-friendly daily challenge about spotting AI-written text." />
+  <link rel="canonical" href="https://pinisolomon.github.io/copilot-autonomous-player/games/spot-the-bot/" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop offset='0' stop-color='%230a0e27'/%3E%3Cstop offset='1' stop-color='%231d4ed8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ctext y='44' x='10' font-size='30' fill='%23ffffff'%3E%F0%9F%94%8D%3C/text%3E%3C/svg%3E" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0a0e27;
+      --bg-2: #050919;
+      --panel: rgba(14, 20, 44, 0.92);
+      --panel-2: rgba(18, 27, 58, 0.95);
+      --panel-3: rgba(9, 13, 31, 0.98);
+      --line: rgba(148, 163, 255, 0.17);
+      --line-strong: rgba(191, 204, 255, 0.28);
+      --text: #f5f7ff;
+      --muted: #9fb0e6;
+      --accent: #67e8f9;
+      --accent-2: #8b7bff;
+      --good: #34d399;
+      --good-bg: rgba(16, 185, 129, 0.16);
+      --bad: #fb7185;
+      --bad-bg: rgba(244, 63, 94, 0.15);
+      --chip: rgba(255, 255, 255, 0.07);
+      --shadow: 0 26px 70px rgba(0, 0, 0, 0.38);
+      --radius: 26px;
+      --flip: 720ms;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% 0%, rgba(103, 232, 249, 0.15), transparent 30%),
+        radial-gradient(circle at 88% 10%, rgba(139, 123, 255, 0.18), transparent 28%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+      padding: max(14px, env(safe-area-inset-top)) 12px max(18px, env(safe-area-inset-bottom));
+      display: flex;
+      justify-content: center;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    button {
+      font: inherit;
+      border: 0;
+      cursor: pointer;
+    }
+
+    [hidden] { display: none !important; }
+
+    .page-shell {
+      width: min(100%, 1120px);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 4px 2px;
+    }
+
+    .back-link {
+      font-weight: 800;
+      letter-spacing: 0.01em;
+    }
+
+    .back-link:hover,
+    .back-link:focus-visible {
+      text-decoration: underline;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .ghost-btn,
+    .share-btn,
+    .guess-btn {
+      min-height: 48px;
+      border-radius: 16px;
+      transition: transform 130ms ease, filter 130ms ease, opacity 130ms ease, background 130ms ease, border-color 130ms ease;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .ghost-btn,
+    .share-btn {
+      padding: 0 16px;
+      border: 1px solid rgba(255, 255, 255, 0.11);
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.06);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .ghost-btn:hover,
+    .share-btn:hover,
+    .guess-btn:hover,
+    .ghost-btn:focus-visible,
+    .share-btn:focus-visible,
+    .guess-btn:focus-visible {
+      filter: brightness(1.08);
+      outline: none;
+    }
+
+    .ghost-btn:active,
+    .share-btn:active,
+    .guess-btn:active {
+      transform: scale(0.98);
+    }
+
+    .ghost-btn[aria-pressed="true"] {
+      background: rgba(103, 232, 249, 0.16);
+      border-color: rgba(103, 232, 249, 0.34);
+    }
+
+    .share-btn {
+      background: linear-gradient(135deg, rgba(103, 232, 249, 0.24), rgba(139, 123, 255, 0.25));
+      font-weight: 800;
+    }
+
+    .share-btn[disabled] {
+      opacity: 0.48;
+      cursor: not-allowed;
+      transform: none;
+      filter: none;
+    }
+
+    .hero {
+      position: relative;
+      background: linear-gradient(180deg, rgba(14, 20, 44, 0.97), rgba(8, 12, 28, 0.98));
+      border: 1px solid var(--line);
+      border-radius: 32px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(103, 232, 249, 0.06), transparent 35%, rgba(139, 123, 255, 0.08));
+      pointer-events: none;
+    }
+
+    .hero-inner,
+    .status-grid,
+    .progress-card,
+    .results-panel,
+    .stats-grid,
+    .samples-grid,
+    .ad-slot,
+    .how-to {
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-inner {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(260px, 0.7fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .title-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .eyebrow {
+      margin: 0;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.4rem, 7vw, 4.1rem);
+      line-height: 0.96;
+      letter-spacing: -0.05em;
+      font-weight: 950;
+      background: linear-gradient(135deg, #ffffff 0%, var(--accent) 44%, #cdb7ff 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .lede {
+      margin: 0;
+      color: var(--muted);
+      max-width: 56ch;
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+
+    .mini-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .mini-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--chip);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      font-size: 0.86rem;
+      color: #dfe6ff;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .pill {
+      background: var(--panel-2);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 12px;
+      min-height: 74px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .pill span {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-weight: 800;
+    }
+
+    .pill strong {
+      font-size: 1.08rem;
+      font-weight: 900;
+    }
+
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .progress-card,
+    .how-to,
+    .results-panel,
+    .ad-slot,
+    .stats-wrap {
+      background: rgba(10, 15, 34, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 16px;
+    }
+
+    .section-label {
+      margin: 0 0 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 0.72rem;
+      font-weight: 900;
+    }
+
+    .progress-head,
+    .results-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+    }
+
+    .progress-head strong,
+    .results-head strong {
+      font-size: 1.1rem;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      margin: 14px 0 8px;
+    }
+
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width 220ms ease;
+    }
+
+    .status-hint,
+    .results-note,
+    .how-to p,
+    .results-panel p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .ad-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 104px;
+      text-align: center;
+      color: var(--muted);
+      border-style: dashed;
+    }
+
+    .ad-slot span {
+      display: block;
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+
+    .stats-wrap {
+      margin-top: 14px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .stat-box {
+      background: var(--panel-2);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 14px 12px;
+      min-height: 88px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .stat-box strong {
+      font-size: 1.5rem;
+      font-weight: 900;
+    }
+
+    .stat-box span {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .samples-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      perspective: 1400px;
+    }
+
+    .sample-card {
+      min-height: 352px;
+      perspective: 1400px;
+    }
+
+    .card-inner {
+      position: relative;
+      width: 100%;
+      min-height: 352px;
+      transform-style: preserve-3d;
+      transition: transform var(--flip) cubic-bezier(.2,.75,.2,1);
+    }
+
+    .sample-card.revealed .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 18px;
+      border-radius: 24px;
+      backface-visibility: hidden;
+      background: linear-gradient(180deg, rgba(16, 22, 49, 0.96), rgba(8, 12, 30, 0.98));
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      overflow: hidden;
+    }
+
+    .card-face::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(103, 232, 249, 0.05), transparent 42%, rgba(139, 123, 255, 0.05));
+      pointer-events: none;
+    }
+
+    .card-back {
+      transform: rotateY(180deg);
+      background: linear-gradient(180deg, rgba(12, 19, 42, 0.98), rgba(7, 11, 26, 0.99));
+    }
+
+    .sample-card.correct .card-back {
+      border-color: rgba(52, 211, 153, 0.4);
+      box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.18);
+    }
+
+    .sample-card.incorrect .card-back {
+      border-color: rgba(251, 113, 133, 0.38);
+      box-shadow: inset 0 0 0 1px rgba(251, 113, 133, 0.16);
+    }
+
+    .card-meta,
+    .card-topline {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-count,
+    .card-type,
+    .answer-pill,
+    .result-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      background: rgba(255, 255, 255, 0.08);
+      color: #eaf1ff;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .result-pill.good {
+      background: var(--good-bg);
+      color: #b5ffde;
+      border-color: rgba(52, 211, 153, 0.28);
+    }
+
+    .result-pill.bad {
+      background: var(--bad-bg);
+      color: #ffd2da;
+      border-color: rgba(251, 113, 133, 0.24);
+    }
+
+    .sample-text,
+    .quote-preview {
+      margin: 0;
+      position: relative;
+      z-index: 1;
+      line-height: 1.7;
+      color: #eef2ff;
+      font-size: 0.98rem;
+      white-space: pre-line;
+      flex: 1;
+    }
+
+    .quote-preview {
+      color: #dbe4ff;
+      font-size: 0.94rem;
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      flex: 0;
+    }
+
+    .guess-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .guess-btn {
+      padding: 0 14px;
+      font-weight: 900;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.11);
+    }
+
+    .guess-btn.selected[data-guess="ai"] {
+      background: rgba(103, 232, 249, 0.16);
+      border-color: rgba(103, 232, 249, 0.36);
+    }
+
+    .guess-btn.selected[data-guess="human"] {
+      background: rgba(139, 123, 255, 0.18);
+      border-color: rgba(139, 123, 255, 0.36);
+    }
+
+    .guess-btn[disabled] {
+      cursor: not-allowed;
+      opacity: 0.86;
+    }
+
+    .guess-status,
+    .choice-line,
+    .explanation {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+
+    .choice-line strong,
+    .answer-label {
+      color: #f7f9ff;
+    }
+
+    .reveal-label {
+      margin: 0;
+      font-size: 1.18rem;
+      font-weight: 900;
+      position: relative;
+      z-index: 1;
+    }
+
+    .results-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .results-panel strong {
+      font-size: 1.4rem;
+      font-weight: 950;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translate(-50%, 18px);
+      background: rgba(247, 249, 255, 0.95);
+      color: #121625;
+      padding: 11px 16px;
+      border-radius: 999px;
+      font-weight: 800;
+      box-shadow: 0 18px 36px rgba(0, 0, 0, 0.28);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 160ms ease, transform 160ms ease;
+      z-index: 40;
+      max-width: calc(100vw - 28px);
+      text-align: center;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 920px) {
+      .hero-inner {
+        grid-template-columns: 1fr;
+      }
+      .status-grid,
+      .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding-inline: 10px;
+      }
+      .hero,
+      .progress-card,
+      .how-to,
+      .results-panel,
+      .ad-slot,
+      .stats-wrap {
+        border-radius: 22px;
+      }
+      .hero {
+        padding: 16px;
+      }
+      .guess-buttons {
+        grid-template-columns: 1fr;
+      }
+      .status-grid,
+      .stats-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .sample-card,
+      .card-inner {
+        min-height: 328px;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .toolbar {
+        width: 100%;
+      }
+      .ghost-btn,
+      .share-btn {
+        flex: 1;
+      }
+      .status-grid,
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <div class="topbar">
+      <a id="backLink" class="back-link" href="../../index.html">← Back to Games</a>
+      <div class="toolbar">
+        <button id="soundToggle" class="ghost-btn" type="button" aria-pressed="false">🔊 Sound On</button>
+        <button id="shareButton" class="share-btn" type="button" disabled>📋 Copy Result</button>
+      </div>
+    </div>
+
+    <section class="hero">
+      <div class="hero-inner">
+        <div>
+          <div class="title-wrap">
+            <p class="eyebrow">Daily AI literacy challenge</p>
+            <h1>Spot the Bot</h1>
+            <p class="lede">Read five text samples, lock in your guesses, then see how many bots you actually spotted. Everyone gets the same daily set.</p>
+            <div class="mini-chips">
+              <span class="mini-chip" id="dayLabel">🔍 Day 1</span>
+              <span class="mini-chip">🌍 Same 5 texts worldwide</span>
+              <span class="mini-chip">🔥 Streaks saved locally</span>
+            </div>
+          </div>
+
+          <div class="status-grid">
+            <div class="pill">
+              <span>Progress</span>
+              <strong id="progressText">0/5 guessed</strong>
+            </div>
+            <div class="pill">
+              <span>Score</span>
+              <strong id="scorePill">— / 5</strong>
+            </div>
+            <div class="pill">
+              <span>Today</span>
+              <strong id="todayState">In progress</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="side-panel">
+          <div class="progress-card">
+            <p class="section-label">Challenge status</p>
+            <div class="progress-head">
+              <strong id="progressHeadline">Make your picks</strong>
+              <span id="progressBadge">0/5</span>
+            </div>
+            <div class="progress-track" aria-hidden="true">
+              <div id="progressFill" class="progress-fill"></div>
+            </div>
+            <p id="statusHint" class="status-hint">Tap AI or Human on all five cards to flip the answers.</p>
+          </div>
+
+          <div class="how-to">
+            <p class="section-label">How to play</p>
+            <p>Look for clues like polished symmetry, oddly formal phrasing, random typos, or hyper-specific lived details. Then trust your gut.</p>
+          </div>
+
+          <div class="ad-slot">
+            <span>Advertisement</span>
+            <div id="gamemonetize-top">[GameMonetize Banner 320×50]</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-wrap">
+        <p class="section-label">Your stats</p>
+        <div class="stats-grid">
+          <div class="stat-box"><strong id="currentStreakStat">0</strong><span>Current streak</span></div>
+          <div class="stat-box"><strong id="maxStreakStat">0</strong><span>Max streak</span></div>
+          <div class="stat-box"><strong id="totalPlayedStat">0</strong><span>Total played</span></div>
+          <div class="stat-box"><strong id="accuracyStat">0%</strong><span>Accuracy</span></div>
+        </div>
+      </div>
+
+      <section id="resultsPanel" class="results-panel" hidden>
+        <div class="results-head">
+          <p class="section-label" style="margin:0;">Results</p>
+          <strong id="finalScore">0/5 correct</strong>
+        </div>
+        <p id="resultsSummary">You finished today's challenge.</p>
+        <p id="sharePreview" class="results-note"></p>
+      </section>
+    </section>
+
+    <section id="samplesGrid" class="samples-grid" aria-label="Daily text samples"></section>
+
+    <div class="ad-slot">
+      <span>Advertisement</span>
+      <div id="gamemonetize-bottom">[GameMonetize Rectangle 300×250]</div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const SAMPLES = [
+      {
+            "category": "Product Review",
+            "answer": "ai",
+            "text": "These earbuds offer a surprisingly expansive soundstage for their size. Voices stay crisp, the battery comfortably lasts a workday, and the transparency mode feels tuned for real commutes rather than marketing copy.",
+            "explanation": "The praise is evenly distributed and polished, which is common in AI-written review prose."
+      },
+      {
+            "category": "Tweet",
+            "answer": "human",
+            "text": "my upstairs neighbor finally stopped practicing trumpet at 11pm so i guess the whole building gets to unclench now",
+            "explanation": "A weirdly specific complaint and casual lowercase delivery make this feel naturally human."
+      },
+      {
+            "category": "Blog Excerpt",
+            "answer": "ai",
+            "text": "Remote work didn't remove office politics; it redistributed them into calendars, Slack response times, and who gets included on the quiet invite.",
+            "explanation": "The sentence is clean, balanced, and abstract in a way AI often produces."
+      },
+      {
+            "category": "Reddit Comment",
+            "answer": "human",
+            "text": "I tried meal prepping and by Wednesday every container smelled faintly like cumin and regret. Still cheaper than takeout tho.",
+            "explanation": "The self-own, abrupt turn, and little \"tho\" feel more human than model-polished."
+      },
+      {
+            "category": "News Snippet",
+            "answer": "human",
+            "text": "City crews reopened Pine Avenue before dawn Friday after a water main break shut the block for nearly 14 hours, according to the public works department.",
+            "explanation": "It uses concrete timing and sourcing without the generic framing AI news blurbs often add."
+      },
+      {
+            "category": "Product Review",
+            "answer": "human",
+            "text": "Bought this toaster oven because my apartment stove runs hot as hell. It makes great garlic bread, but the door squeaks like a tiny haunted house.",
+            "explanation": "The slangy complaint and odd little metaphor give it a personal, human voice."
+      },
+      {
+            "category": "Tweet",
+            "answer": "ai",
+            "text": "A gentle reminder: productivity is a tool, not an identity. Rest is not a reward for exhaustion; it is part of sustainable work.",
+            "explanation": "This reads like a polished maxim, with symmetrical phrasing that AI likes to generate."
+      },
+      {
+            "category": "Blog Excerpt",
+            "answer": "human",
+            "text": "I started running again because my doctor suggested it and because my jeans were getting philosophical. First week back, I wheezed past a guy walking a corgi and lost.",
+            "explanation": "The comic comparison and messy little anecdote feel distinctly human."
+      },
+      {
+            "category": "Reddit Comment",
+            "answer": "ai",
+            "text": "If you're learning to cook, focus on three repeatable dinners before chasing variety. Consistency builds intuition faster than collecting complicated recipes.",
+            "explanation": "It's tidy, helpful, and suspiciously concise in the way AI advice often is."
+      },
+      {
+            "category": "News Snippet",
+            "answer": "ai",
+            "text": "The startup said its new translation feature will roll out globally this summer, positioning the product as a faster option for distributed support teams.",
+            "explanation": "The corporate positioning language sounds generic and synthesized."
+      },
+      {
+            "category": "Product Review",
+            "answer": "ai",
+            "text": "The desk lamp feels thoughtfully engineered: the hinge stays firm, the light diffuses evenly, and the touch controls respond without lag.",
+            "explanation": "This feature inventory is smooth and balanced, a classic AI review rhythm."
+      },
+      {
+            "category": "Tweet",
+            "answer": "human",
+            "text": "took one 'quick' nap after work and woke up convinced it was Tuesday. adult life is just calendar jump scares.",
+            "explanation": "The exaggerated little story and casual voice feel improvised rather than generated."
+      },
+      {
+            "category": "Blog Excerpt",
+            "answer": "ai",
+            "text": "Travel has become less about collecting landmarks and more about noticing how different cities choreograph ordinary life: queues, sidewalks, coffee, silence.",
+            "explanation": "The sentence is elegant and essay-like, with neat abstraction AI often leans on."
+      },
+      {
+            "category": "Reddit Comment",
+            "answer": "human",
+            "text": "Nah, frozen fries are worth the freezer space. I cut potatoes from scratch once and the sink looked like I'd lost a fight with dirt.",
+            "explanation": "The rough phrasing and visual exaggeration feel naturally human."
+      },
+      {
+            "category": "News Snippet",
+            "answer": "human",
+            "text": "A county judge on Monday delayed the hearing until next week, citing a scheduling conflict and two late-filed motions from the defense.",
+            "explanation": "It's plain, specific, and uneven in a way real news copy often is."
+      },
+      {
+            "category": "Product Review",
+            "answer": "human",
+            "text": "This backpack is solid, but one zipper already does that annoying snag thing unless I baby it. Laptop sleeve fits my chunky 16-incher though.",
+            "explanation": "The fussy complaint and colloquial \"16-incher\" sound naturally human."
+      },
+      {
+            "category": "Tweet",
+            "answer": "ai",
+            "text": "The internet rewards immediacy, but meaningful expertise still grows slowly. Speed can distribute information; it cannot replace judgment.",
+            "explanation": "It lands like a distilled lesson, with a polished contrast structure AI loves."
+      },
+      {
+            "category": "Blog Excerpt",
+            "answer": "human",
+            "text": "Our garden isn't 'thriving' so much as aggressively volunteering. The mint escaped again, and the tomatoes are acting like moody coworkers.",
+            "explanation": "The weird metaphor chain and playful inconsistency make it feel human."
+      },
+      {
+            "category": "Reddit Comment",
+            "answer": "ai",
+            "text": "When people say a hobby must be monetized to be valuable, they're importing market logic into places where joy should be allowed to remain inefficient.",
+            "explanation": "The theoretical framing is coherent and polished in a very model-like way."
+      },
+      {
+            "category": "News Snippet",
+            "answer": "ai",
+            "text": "Researchers at the university released preliminary findings Tuesday suggesting the coating reduced spoilage in refrigerated berries by up to four days.",
+            "explanation": "It's plausible, but the careful scientific phrasing feels algorithmically clean."
+      },
+      {
+            "category": "Product Review",
+            "answer": "ai",
+            "text": "For a budget mouse, the click response is remarkably precise and the matte finish resists the greasy shine that cheaper plastics usually develop.",
+            "explanation": "The sentence is smooth and calibrated, with polished comparison language AI often uses."
+      },
+      {
+            "category": "Tweet",
+            "answer": "human",
+            "text": "why does every recipe site start with a memoir i just need to know oven temp before my onions burn",
+            "explanation": "It sounds irritated, rushed, and very specifically online-human."
+      },
+      {
+            "category": "Blog Excerpt",
+            "answer": "ai",
+            "text": "Good meetings leave behind artifacts: decisions, owners, and timing. Bad meetings leave behind only a collective sense that everyone was briefly kidnapped.",
+            "explanation": "The clean setup-punchline structure feels crafted by a model aiming for wit."
+      },
+      {
+            "category": "Reddit Comment",
+            "answer": "human",
+            "text": "I quit caffeine for six days and became the kind of person who sighs before opening email. Zero stars, do not recommend.",
+            "explanation": "The dramatic mini-review and deadpan ending feel human and personal."
+      },
+      {
+            "category": "News Snippet",
+            "answer": "human",
+            "text": "The bookstore's owner said foot traffic picked up after the city finished nearby sidewalk repairs, though weekend sales still trail last summer's numbers.",
+            "explanation": "It has grounded local detail and a slightly awkward comparison that feels real."
+      },
+      {
+            "category": "Product Review",
+            "answer": "human",
+            "text": "Love the blanket, hate the shedding. I looked down after movie night and my black sweatpants looked like they'd adopted a ghost.",
+            "explanation": "That goofy visual complaint feels like something an actual person blurted out."
+      },
+      {
+            "category": "Tweet",
+            "answer": "ai",
+            "text": "Confidence is often mistaken for clarity online. The two can sound identical in short form, which is why certainty travels faster than nuance.",
+            "explanation": "It's concise and neatly philosophical, which is a common AI signature."
+      },
+      {
+            "category": "Blog Excerpt",
+            "answer": "human",
+            "text": "I kept a sourdough starter alive for three months and honestly the relationship got codependent. Miss one feeding and it stared at me with bubbles.",
+            "explanation": "The odd personification and conversational rhythm feel very human."
+      },
+      {
+            "category": "Reddit Comment",
+            "answer": "ai",
+            "text": "You don't need an elaborate morning routine to become disciplined. One reliable action repeated daily will outperform a dramatic reset you abandon by Thursday.",
+            "explanation": "This has the crisp, generalized cadence of AI self-improvement advice."
+      },
+      {
+            "category": "News Snippet",
+            "answer": "ai",
+            "text": "Officials said the pilot program will begin in three neighborhoods this fall, with expansion tied to ridership data and funding approvals.",
+            "explanation": "The policy language is plausible but broad and somewhat template-like."
+      },
+      {
+            "category": "Product Review",
+            "answer": "ai",
+            "text": "The face cleanser doesn't foam much, which initially felt underwhelming, but it leaves skin calm and hydrated instead of tight.",
+            "explanation": "The balanced concession-to-praise structure is a classic AI move."
+      },
+      {
+            "category": "Tweet",
+            "answer": "human",
+            "text": "spent twenty minutes looking for my glasses. they were on my head. i am not winning today folks",
+            "explanation": "The clumsy self-report and casual phrasing feel naturally human."
+      },
+      {
+            "category": "Blog Excerpt",
+            "answer": "ai",
+            "text": "Most productivity systems fail not because they lack features, but because they demand a version of us that never gets tired, bored, or interrupted.",
+            "explanation": "It sounds like a polished thesis sentence rather than a messy personal thought."
+      },
+      {
+            "category": "Reddit Comment",
+            "answer": "human",
+            "text": "My landlord fixed the leak with what looked suspiciously like optimism and fresh caulk. We'll see how the ceiling feels next rain.",
+            "explanation": "The sarcasm and specific gripe feel more lived-in than generated."
+      },
+      {
+            "category": "News Snippet",
+            "answer": "human",
+            "text": "Firefighters contained the brush fire near Route 8 by Sunday evening, and no homes were damaged, the county emergency office said.",
+            "explanation": "This sticks to factual detail without adding the tidy framing AI often prefers."
+      },
+      {
+            "category": "Product Review",
+            "answer": "human",
+            "text": "These sheets are comfy but they came out of the box smelling like a warehouse breakup. One wash fixed it, still weird.",
+            "explanation": "The bizarre little phrase \"warehouse breakup\" feels spontaneously human."
+      },
+      {
+            "category": "Tweet",
+            "answer": "ai",
+            "text": "Taste is rarely built through certainty. It usually forms through repeated exposure, revision, and the humility to notice what doesn't age well.",
+            "explanation": "The sentence is reflective and balanced in a very AI-ish way."
+      },
+      {
+            "category": "Blog Excerpt",
+            "answer": "human",
+            "text": "I thought moving would make me minimalist. Instead I learned I own four mystery chargers and a ladle I'm emotionally attached to.",
+            "explanation": "The hyper-specific clutter detail feels authentic and human."
+      },
+      {
+            "category": "Reddit Comment",
+            "answer": "ai",
+            "text": "A lot of career advice overemphasizes passion and underemphasizes tolerance. The better question is often what problems you're willing to stay with.",
+            "explanation": "It reframes the issue neatly, which is something models do very well."
+      },
+      {
+            "category": "News Snippet",
+            "answer": "ai",
+            "text": "The museum announced an extended weekend schedule for August, saying the change is intended to accommodate summer tourism and evening programming.",
+            "explanation": "The institutional phrasing feels broad and synthetic rather than reported."
+      },
+      {
+            "category": "Product Review",
+            "answer": "ai",
+            "text": "After two weeks of use, the standing desk still rises smoothly and remembers saved heights without the stutter I've seen on cheaper models.",
+            "explanation": "The measured comparison sounds polished and evenly weighted, like AI review copy."
+      },
+      {
+            "category": "Tweet",
+            "answer": "human",
+            "text": "the cat knocked over my iced coffee then acted offended that the floor was wet. incredible leadership qualities honestly",
+            "explanation": "The petty little story and punchline feel casually human."
+      },
+      {
+            "category": "Blog Excerpt",
+            "answer": "ai",
+            "text": "Writing in public can feel risky because unfinished ideas expose our process, but that visibility is often what makes the work more honest.",
+            "explanation": "This is clean, abstract, and motivational in the way AI often writes essays."
+      },
+      {
+            "category": "Reddit Comment",
+            "answer": "human",
+            "text": "If your rice keeps turning mushy, check the lid, dude. I spent months blaming myself and it was just a warped pot top.",
+            "explanation": "The \"dude\" and self-correction feel more spontaneous than model-generated."
+      },
+      {
+            "category": "News Snippet",
+            "answer": "human",
+            "text": "Transit officials restored full service on the Green Line shortly after 6 a.m. Tuesday following an overnight signal issue.",
+            "explanation": "It's concise and operational, with the small timing details of human news writing."
+      },
+      {
+            "category": "Product Review",
+            "answer": "human",
+            "text": "Pretty good fan. Quiet on low, absolute jet engine on high, but that's kinda the job description so I'm not mad.",
+            "explanation": "The shrugging voice and messy phrasing feel like a real person talking."
+      },
+      {
+            "category": "Tweet",
+            "answer": "ai",
+            "text": "Not every decision deserves maximal optimization. Sometimes the smartest system is the one with the fewest moving parts.",
+            "explanation": "This reads like a tidy productivity aphorism, which is a common AI shape."
+      },
+      {
+            "category": "Blog Excerpt",
+            "answer": "human",
+            "text": "My first attempt at camping as an adult mostly involved googling 'can dew soak through a tent' at 2:13 a.m.",
+            "explanation": "The timestamp and anxious specificity feel authentically human."
+      },
+      {
+            "category": "Reddit Comment",
+            "answer": "ai",
+            "text": "People underestimate how much easier exercise becomes when the goal shifts from transformation to familiarity. Repetition lowers the psychological entry cost.",
+            "explanation": "The coaching tone is polished and generalized in a model-like way."
+      },
+      {
+            "category": "News Snippet",
+            "answer": "ai",
+            "text": "Company representatives said the recall affects a limited batch produced in March and that replacement units will ship automatically to registered customers.",
+            "explanation": "The corporate recall wording is plausible but sounds machine-smoothed."
+      },
+      {
+            "category": "Product Review",
+            "answer": "ai",
+            "text": "The notebook paper is thicker than expected, so gel pens don't ghost much, and the binding lays flat without fighting you at the edges.",
+            "explanation": "It inventories features with very polished, balanced phrasing."
+      },
+      {
+            "category": "Tweet",
+            "answer": "human",
+            "text": "if one more app asks me to journal, hydrate, stretch, budget, and manifest before 8am i'm deleting civilization",
+            "explanation": "The exaggerated rant and chaotic list feel stubbornly human."
+      },
+      {
+            "category": "Blog Excerpt",
+            "answer": "ai",
+            "text": "Cities reveal their priorities through what they make effortless. Bike lanes, benches, shade, and public bathrooms are policies disguised as everyday comfort.",
+            "explanation": "This has the elegant thesis-and-example structure AI essay writing often produces."
+      },
+      {
+            "category": "Reddit Comment",
+            "answer": "human",
+            "text": "I finally patched the drywall and now the whole room has one suspiciously perfect square. guests keep staring at it lol.",
+            "explanation": "The awkward success story and little \"lol\" feel human."
+      },
+      {
+            "category": "News Snippet",
+            "answer": "human",
+            "text": "Organizers expect about 4,000 runners for Saturday's riverfront 10K, a slight increase from last year's turnout, according to registration figures released Wednesday.",
+            "explanation": "The sourced number and mildly clunky phrasing feel like real local reporting."
+      },
+      {
+            "category": "Product Review",
+            "answer": "human",
+            "text": "The water bottle is cute and doesn't leak, but the straw makes this dramatic slurp when it's almost empty. office comedy, every afternoon.",
+            "explanation": "The petty, sensory complaint feels too weird and personal to be obvious AI."
+      },
+      {
+            "category": "Tweet",
+            "answer": "ai",
+            "text": "Algorithms are excellent at finding patterns in past behavior; they are far less qualified to tell us what deserves more human attention.",
+            "explanation": "The polished contrast and semicolon-heavy structure feel AI-generated."
+      },
+      {
+            "category": "Blog Excerpt",
+            "answer": "human",
+            "text": "I tried digital decluttering and somehow ended up with three desktop folders named 'final-final-actually'. Progress is a direction, I guess.",
+            "explanation": "The messy file-name joke and hedging feel naturally human."
+      },
+      {
+            "category": "Reddit Comment",
+            "answer": "ai",
+            "text": "If a budget only works when every week is ideal, it isn't a realistic plan—it's a performance review for your groceries.",
+            "explanation": "The polished analogy and em dash are the kind of stylized signals people associate with AI."
+      },
+      {
+            "category": "News Snippet",
+            "answer": "ai",
+            "text": "The nonprofit said donations rose 18 percent after it simplified its checkout flow, underscoring how small friction points can suppress charitable giving.",
+            "explanation": "The phrasing sounds analytical and generic, more like AI than on-the-ground reporting."
+      }
+];
+
+    const STORAGE_KEYS = {
+      stats: 'stb_stats',
+      streak: 'stb_streak',
+      lastDay: 'stb_last_day',
+      sound: 'stb_sound',
+      dayPrefix: 'stb_day_'
+    };
+
+    const CHALLENGE_EPOCH = Date.UTC(2026, 4, 24);
+    const TOTAL_PER_SET = 5;
+    const DAILY_SETS = Array.from({ length: SAMPLES.length / TOTAL_PER_SET }, (_, index) => (
+      SAMPLES.slice(index * TOTAL_PER_SET, index * TOTAL_PER_SET + TOTAL_PER_SET)
+    ));
+    const totalSets = DAILY_SETS.length;
+    const daySeed = Math.floor(Date.now() / 86400000);
+    const setIndex = daySeed % totalSets;
+    const challengeNumber = Math.max(1, Math.floor((Date.now() - CHALLENGE_EPOCH) / 86400000) + 1);
+    const dayKey = `${STORAGE_KEYS.dayPrefix}${daySeed}`;
+    const todaysSamples = DAILY_SETS[setIndex];
+
+    const safeStorage = {
+      get(key) {
+        try { return window.localStorage.getItem(key); } catch (error) { return null; }
+      },
+      set(key, value) {
+        try { window.localStorage.setItem(key, value); } catch (error) {}
+      }
+    };
+
+    function loadJSON(key, fallback) {
+      const raw = safeStorage.get(key);
+      if (!raw) return fallback;
+      try {
+        return { ...fallback, ...JSON.parse(raw) };
+      } catch (error) {
+        return fallback;
+      }
+    }
+
+    let audioContext = null;
+    let toastTimer = 0;
+    let soundPulseTimer = 0;
+
+    const state = {
+      samples: todaysSamples,
+      guesses: Array(todaysSamples.length).fill(null),
+      revealed: false,
+      score: 0,
+      countedToday: false,
+      challengeNumber,
+      daySeed,
+      soundOn: safeStorage.get(STORAGE_KEYS.sound) !== 'off',
+      stats: loadJSON(STORAGE_KEYS.stats, {
+        currentStreak: Number(safeStorage.get(STORAGE_KEYS.streak)) || 0,
+        maxStreak: 0,
+        totalPlayed: 0,
+        totalCorrect: 0
+      })
+    };
+
+    const samplesGrid = document.getElementById('samplesGrid');
+    const progressText = document.getElementById('progressText');
+    const progressHeadline = document.getElementById('progressHeadline');
+    const progressBadge = document.getElementById('progressBadge');
+    const progressFill = document.getElementById('progressFill');
+    const statusHint = document.getElementById('statusHint');
+    const todayState = document.getElementById('todayState');
+    const scorePill = document.getElementById('scorePill');
+    const finalScore = document.getElementById('finalScore');
+    const resultsPanel = document.getElementById('resultsPanel');
+    const resultsSummary = document.getElementById('resultsSummary');
+    const sharePreview = document.getElementById('sharePreview');
+    const shareButton = document.getElementById('shareButton');
+    const soundToggle = document.getElementById('soundToggle');
+    const toast = document.getElementById('toast');
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      window.clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(() => toast.classList.remove('show'), 1800);
+    }
+
+    function saveStats() {
+      safeStorage.set(STORAGE_KEYS.stats, JSON.stringify(state.stats));
+      safeStorage.set(STORAGE_KEYS.streak, String(state.stats.currentStreak));
+    }
+
+    function updateStatsUI() {
+      const accuracy = state.stats.totalPlayed
+        ? Math.round((state.stats.totalCorrect / (state.stats.totalPlayed * TOTAL_PER_SET)) * 100)
+        : 0;
+      document.getElementById('currentStreakStat').textContent = String(state.stats.currentStreak);
+      document.getElementById('maxStreakStat').textContent = String(state.stats.maxStreak);
+      document.getElementById('totalPlayedStat').textContent = String(state.stats.totalPlayed);
+      document.getElementById('accuracyStat').textContent = `${accuracy}%`;
+    }
+
+    function updateSoundButton() {
+      soundToggle.setAttribute('aria-pressed', String(state.soundOn));
+      soundToggle.textContent = state.soundOn ? '🔊 Sound On' : '🔇 Sound Off';
+    }
+
+    function ensureAudio() {
+      if (!state.soundOn) return null;
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return null;
+      if (!audioContext) audioContext = new AudioCtx();
+      if (audioContext.state === 'suspended') {
+        audioContext.resume().catch(() => {});
+      }
+      return audioContext;
+    }
+
+    function playTone(frequency, duration, type, gainValue, delaySeconds) {
+      const ctx = ensureAudio();
+      if (!ctx) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const start = ctx.currentTime + (delaySeconds || 0);
+      osc.type = type || 'sine';
+      osc.frequency.setValueAtTime(frequency, start);
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(gainValue || 0.05, start + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration / 1000);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + duration / 1000 + 0.02);
+    }
+
+    function playCorrectSound() {
+      playTone(620, 120, 'sine', 0.05, 0);
+      playTone(880, 160, 'triangle', 0.04, 0.12);
+    }
+
+    function playIncorrectSound() {
+      playTone(240, 150, 'sawtooth', 0.035, 0);
+      playTone(180, 220, 'triangle', 0.028, 0.08);
+    }
+
+    function guessLabel(value) {
+      return value === 'ai' ? '🤖 AI' : '🧠 Human';
+    }
+
+    function answerLabel(value) {
+      return value === 'ai' ? 'Actually AI' : 'Actually Human';
+    }
+
+    function persistDayState() {
+      safeStorage.set(dayKey, JSON.stringify({
+        guesses: state.guesses,
+        revealed: state.revealed,
+        score: state.score,
+        countedToday: state.countedToday,
+        shareText: buildShareText()
+      }));
+    }
+
+    function loadDayState() {
+      const saved = loadJSON(dayKey, null);
+      if (!saved || !Array.isArray(saved.guesses) || saved.guesses.length !== state.samples.length) return;
+      state.guesses = saved.guesses.map((guess) => (guess === 'ai' || guess === 'human') ? guess : null);
+      state.revealed = Boolean(saved.revealed);
+      state.score = Number(saved.score) || 0;
+      state.countedToday = Boolean(saved.countedToday || saved.revealed);
+    }
+
+    function guessedCount() {
+      return state.guesses.filter(Boolean).length;
+    }
+
+    function buildShareText() {
+      const emojiLine = state.guesses.map((guess) => guess === 'ai' ? '🤖' : '🧠').join('');
+      return `${emojiLine} — ${state.score}/5 Spotted! Day ${state.challengeNumber} 🔍`;
+    }
+
+    function updateStatusUI() {
+      const count = guessedCount();
+      const done = state.revealed;
+      progressText.textContent = done ? `${count}/5 complete` : `${count}/5 guessed`;
+      progressHeadline.textContent = done ? 'Answers revealed' : 'Make your picks';
+      progressBadge.textContent = `${count}/5`;
+      progressFill.style.width = `${(count / TOTAL_PER_SET) * 100}%`;
+      scorePill.textContent = done ? `${state.score} / 5` : '— / 5';
+      todayState.textContent = done ? 'Finished' : (count ? 'In progress' : 'Waiting');
+      statusHint.textContent = done
+        ? 'Come back tomorrow for a new mix of humans and bots.'
+        : 'Tap AI or Human on all five cards to flip the answers.';
+      shareButton.disabled = !done;
+      sharePreview.textContent = done ? buildShareText() : '';
+      finalScore.textContent = `${state.score}/5 correct`;
+      resultsSummary.textContent = done
+        ? `You spotted ${state.score} out of 5 correctly. ${state.score >= 4 ? 'Sharp eyes.' : 'These bots are getting sneaky.'}`
+        : '';
+      resultsPanel.hidden = !done;
+    }
+
+    function cardMarkup(sample, index, isAnimatedReveal) {
+      const guess = state.guesses[index];
+      const isCorrect = guess === sample.answer;
+      const revealedClass = state.revealed && !isAnimatedReveal ? 'revealed' : '';
+      const resultClass = state.revealed && !isAnimatedReveal ? (isCorrect ? 'correct' : 'incorrect') : '';
+      const statusText = guess ? `Locked in: ${guessLabel(guess)}` : 'Pick the one that feels more human.';
+      const frontButtons = ['ai', 'human'].map((option) => {
+        const selected = guess === option;
+        return `<button class="guess-btn ${selected ? 'selected' : ''}" type="button" data-index="${index}" data-guess="${option}" aria-pressed="${selected}" ${guess ? 'disabled' : ''}>${guessLabel(option)}</button>`;
+      }).join('');
+      return `
+        <article class="sample-card ${revealedClass} ${resultClass}" data-index="${index}" data-correct="${guess === sample.answer}">
+          <div class="card-inner">
+            <section class="card-face card-front">
+              <div class="card-meta">
+                <span class="card-count">Sample ${index + 1}</span>
+                <span class="card-type">${sample.category}</span>
+              </div>
+              <p class="sample-text">${sample.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+              <div class="guess-buttons">${frontButtons}</div>
+              <p class="guess-status">${statusText}</p>
+            </section>
+            <section class="card-face card-back">
+              <div class="card-topline">
+                <span class="answer-pill">${sample.category}</span>
+                <span class="result-pill ${isCorrect ? 'good' : 'bad'}">${isCorrect ? '✓ Correct' : '✕ Missed'}</span>
+              </div>
+              <p class="reveal-label"><span class="answer-label">${answerLabel(sample.answer)}</span></p>
+              <p class="quote-preview">${sample.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+              <p class="choice-line">You guessed <strong>${guessLabel(guess)}</strong>.</p>
+              <p class="explanation">${sample.explanation}</p>
+            </section>
+          </div>
+        </article>
+      `;
+    }
+
+    function attachGuessHandlers() {
+      samplesGrid.querySelectorAll('.guess-btn').forEach((button) => {
+        button.addEventListener('click', () => {
+          const index = Number(button.dataset.index);
+          const guess = button.dataset.guess;
+          if (state.guesses[index] || state.revealed) return;
+          state.guesses[index] = guess;
+          persistDayState();
+          renderCards(false);
+          updateStatusUI();
+          if (guessedCount() === TOTAL_PER_SET) {
+            window.setTimeout(() => completeChallenge(false), 180);
+          }
+        });
+      });
+    }
+
+    function renderCards(animatedReveal) {
+      samplesGrid.innerHTML = state.samples.map((sample, index) => cardMarkup(sample, index, animatedReveal)).join('');
+      attachGuessHandlers();
+      if (state.revealed && animatedReveal) {
+        [...samplesGrid.querySelectorAll('.sample-card')].forEach((card, index) => {
+          window.setTimeout(() => {
+            const isCorrect = card.dataset.correct === 'true';
+            card.classList.add('revealed', isCorrect ? 'correct' : 'incorrect');
+            if (state.soundOn) {
+              soundPulseTimer = window.setTimeout(() => {
+                (isCorrect ? playCorrectSound : playIncorrectSound)();
+              }, 0);
+            }
+          }, index * 120);
+        });
+      }
+    }
+
+    function completeChallenge(fromSavedState) {
+      if (state.revealed && !fromSavedState && state.countedToday) {
+        updateStatusUI();
+        return;
+      }
+      state.score = state.guesses.reduce((total, guess, index) => total + (guess === state.samples[index].answer ? 1 : 0), 0);
+      state.revealed = true;
+
+      if (!state.countedToday) {
+        const lastDayRaw = safeStorage.get(STORAGE_KEYS.lastDay);
+        const lastDay = lastDayRaw === null ? null : Number(lastDayRaw);
+        if (lastDay === state.daySeed - 1) {
+          state.stats.currentStreak += 1;
+        } else if (lastDay === state.daySeed) {
+          // already counted elsewhere, leave as-is
+        } else {
+          state.stats.currentStreak = 1;
+        }
+        state.stats.maxStreak = Math.max(state.stats.maxStreak, state.stats.currentStreak);
+        state.stats.totalPlayed += 1;
+        state.stats.totalCorrect += state.score;
+        safeStorage.set(STORAGE_KEYS.lastDay, String(state.daySeed));
+        saveStats();
+        state.countedToday = true;
+      }
+
+      persistDayState();
+      updateStatsUI();
+      updateStatusUI();
+      renderCards(!fromSavedState);
+    }
+
+    async function copyResult() {
+      if (!state.revealed) {
+        showToast('Finish all 5 guesses first.');
+        return;
+      }
+      const text = buildShareText();
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const helper = document.createElement('textarea');
+          helper.value = text;
+          helper.setAttribute('readonly', '');
+          helper.style.position = 'fixed';
+          helper.style.opacity = '0';
+          document.body.appendChild(helper);
+          helper.select();
+          document.execCommand('copy');
+          helper.remove();
+        }
+        showToast('Result copied to clipboard.');
+        shareButton.textContent = '✅ Copied!';
+        window.setTimeout(() => {
+          shareButton.textContent = '📋 Copy Result';
+        }, 1400);
+      } catch (error) {
+        showToast('Clipboard copy failed.');
+      }
+    }
+
+    function boot() {
+      document.getElementById('dayLabel').textContent = `🔍 Day ${state.challengeNumber}`;
+      loadDayState();
+      updateSoundButton();
+      updateStatsUI();
+      updateStatusUI();
+      renderCards(false);
+      if (state.revealed) {
+        updateStatusUI();
+        renderCards(false);
+      }
+
+      soundToggle.addEventListener('click', () => {
+        state.soundOn = !state.soundOn;
+        safeStorage.set(STORAGE_KEYS.sound, state.soundOn ? 'on' : 'off');
+        updateSoundButton();
+        if (state.soundOn) playTone(540, 110, 'triangle', 0.04, 0);
+      });
+
+      shareButton.addEventListener('click', copyResult);
+    }
+
+    boot();
+  </script>
+
+  <script>
+    window.__adReady = false;
+    window.SDK_OPTIONS = {
+      gameId: "sb_spot_the_bot_01",
+      onEvent: function(a) {
+        switch(a.name) {
+          case "SDK_GAME_PAUSE": break;
+          case "SDK_GAME_START": window.__adReady = true; break;
+          case "SDK_READY": window.__adReady = true; break;
+        }
+      }
+    };
+    setTimeout(() => { window.__adReady = true; }, 5000);
+  </script>
+  <script id="gamemonetize-sdk" src="https://api.gamemonetize.com/sdk.js" async></script>
+</body>
+</html>
